@@ -50,7 +50,8 @@ def run(robot):
 
             # TODO: Change this event to listen to when the robot changes direction to update its heading accordingly
             if event.type == pygame.MOUSEBUTTONDOWN:
-                robot_image = pygame.transform.rotate(robot_image, robot.theta - 90)
+                robot.theta += 90
+                robot_image = pygame.transform.rotate(robot_image, 90)
 
             # TODO: Change individual events to their respective functions
             if event.type == pygame.KEYDOWN:
