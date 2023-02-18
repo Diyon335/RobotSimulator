@@ -7,7 +7,7 @@ is_running = True
 window_size = (900, 800)
 
 change_robot_size = False
-new_robot_size = (107, 107)
+robot_size = (107, 107)
 
 walls = [
     Line(Point(110, 90), Point(810, 90)),
@@ -20,10 +20,11 @@ walls = [
 velocity_display_distance = 20
 
 # Display the sensor's sensed distance a certain distance (pixels) away from the centre of the robot
-sensor_display_distance = 60
+sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
 velocity_change = 1
+
 
 def run(robot):
     """
@@ -46,9 +47,9 @@ def run(robot):
     robot_image = pygame.image.load("robot.png")
 
     # Default size for the robot is 107x107 pixels. If this needs to be changed, set change_robot_size = True and
-    # update new_robot_size
+    # update robot_size
     if change_robot_size:
-        robot_image = pygame.transform.scale(robot_image, new_robot_size)
+        robot_image = pygame.transform.scale(robot_image, robot_size)
 
     global is_running
     while is_running:
@@ -59,12 +60,10 @@ def run(robot):
             if event.type == pygame.QUIT:
                 is_running = False
 
-            # TODO: Change this event to listen to when the robot changes direction to update its heading accordingly
-            # TODO: Might not actually be needed. Depending on the key press, the velocities will be changed
-            # TODO: so just update the position of the robot after all these if statements
+            # TODO: This is just for testing. Left click = 90 degree rotation counter clockwise
             if event.type == pygame.MOUSEBUTTONDOWN:
                 robot.theta += 90
-                robot_image = pygame.transform.rotate(robot_image, 60)
+                robot_image = pygame.transform.rotate(robot_image, 90)
 
             # TODO: Change individual events to their respective functions. For now it's just test stuff
             if event.type == pygame.KEYDOWN:
@@ -101,12 +100,16 @@ def run(robot):
                     robot.v_l -= velocity_change
                     robot.v_r -= velocity_change
 
-        # TODO: Update robot's pos here
+        # TODO: Update robot's pos here + rotate png according to new theta. By how much should it rotate?
+        #  new theta - old theta
+
+        # old_theta = robot.theta
         # robot.update_position()
+        # robot_image = pygame.transform.rotate(robot_image, robot.theta - old_theta)
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
-        window_surface.blit(robot_image, (robot.pos[0] - new_robot_size[0]/2, robot.pos[1] - new_robot_size[1]/2))
+        window_surface.blit(robot_image, (robot.pos[0] - robot_size[0]/2, robot.pos[1] - robot_size[1]/2))
 
         for wall in walls:
             pygame.draw.line(window_surface, "#000000", wall.p1, wall.p2, width=2)
@@ -114,9 +117,8 @@ def run(robot):
         # Draw velocity rectangles
         font = pygame.font.Font(None, 20)
 
-        # TODO: Replace l and r with v_l and v_r
-        v_l_text = font.render("l", True, "#000000")
-        v_r_text = font.render("r", True, "#000000")
+        v_l_text = font.render(str(robot.v_l), True, "#000000")
+        v_r_text = font.render(str(robot.v_r), True, "#000000")
 
         v_l_rectangle = v_l_text.get_rect()
         v_l_rectangle.center = (
@@ -133,15 +135,15 @@ def run(robot):
         window_surface.blit(v_l_text, v_l_rectangle)
         window_surface.blit(v_r_text, v_r_rectangle)
 
-        """This is just a test, this won't be here at the end"""
-        robot.sensors[0].sense_distance()
-
-        # TODO: Replace with actual sensor angles and distances
         # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
-        sensors = [(0, "1"), (90, "2"), (180, "3")]
+        sensors = [(sensor.angle, sensor.sense_distance(), sensor.p1, sensor.p2) for sensor in robot.sensors]
 
         for sensor in sensors:
-            sensor_distance = font.render(sensor[1], True, "#000000")
+
+            # This is temporary, just to show the lines of the sensor's detection range
+            pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+
+            sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
 
             sensor_rectangle = sensor_distance.get_rect()
             sensor_rectangle.center = (
