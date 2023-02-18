@@ -22,6 +22,9 @@ velocity_display_distance = 20
 # Display the sensor's sensed distance a certain distance (pixels) away from the centre of the robot
 sensor_display_distance = 60
 
+# By how much should the velocity of the wheels increase/decrease
+velocity_change = 1
+
 
 def run(robot):
     """
@@ -58,6 +61,8 @@ def run(robot):
                 is_running = False
 
             # TODO: Change this event to listen to when the robot changes direction to update its heading accordingly
+            # TODO: Might not actually be needed. Depending on the key press, the velocities will be changed
+            # TODO: so just update the position of the robot after all these if statements
             if event.type == pygame.MOUSEBUTTONDOWN:
                 robot.theta += 90
                 robot_image = pygame.transform.rotate(robot_image, 90)
@@ -68,19 +73,19 @@ def run(robot):
                 # +ve increment of left wheel speed
                 if event.key == pygame.K_w:
                     robot.pos = (robot.pos[0], robot.pos[1] - 10)
-                    robot.v_l += 10
+                    robot.v_l += velocity_change
 
                 # -ve increment of left wheel speed
                 if event.key == pygame.K_s:
-                    robot.v_l -= 10
+                    robot.v_l -= velocity_change
 
                 # +ve increment of right wheel speed
                 if event.key == pygame.K_o:
-                    robot.v_r += 10
+                    robot.v_r += velocity_change
 
                 # +ve increment of right wheel speed
                 if event.key == pygame.K_l:
-                    robot.v_r -= 10
+                    robot.v_r -= velocity_change
 
                 # Both wheel speeds set to 0
                 if event.key == pygame.K_x:
@@ -89,13 +94,16 @@ def run(robot):
 
                 # +ve increment of both wheel speeds
                 if event.key == pygame.K_t:
-                    robot.v_l += 10
-                    robot.v_r += 10
+                    robot.v_l += velocity_change
+                    robot.v_r += velocity_change
 
                 # -ve increment of both wheel speeds
                 if event.key == pygame.K_g:
-                    robot.v_l -= 10
-                    robot.v_r -= 10
+                    robot.v_l -= velocity_change
+                    robot.v_r -= velocity_change
+
+        # TODO: Update robot's pos here
+        # robot.update_position()
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
@@ -107,19 +115,20 @@ def run(robot):
         # Draw velocity rectangles
         font = pygame.font.Font(None, 20)
 
-        v_l_text = font.render(str(robot.v_l), True, "#000000")
-        v_r_text = font.render(str(robot.v_r), True, "#000000")
+        # TODO: Replace l and r with v_l and v_r
+        v_l_text = font.render("l", True, "#000000")
+        v_r_text = font.render("r", True, "#000000")
 
         v_l_rectangle = v_l_text.get_rect()
         v_l_rectangle.center = (
             robot.pos[0] + velocity_display_distance * math.cos(math.radians(90 + robot.theta)),
-            robot.pos[1] + velocity_display_distance * math.sin(math.radians(90 + robot.theta))
+            robot.pos[1] - velocity_display_distance * math.sin(math.radians(90 + robot.theta))
         )
 
         v_r_rectangle = v_r_text.get_rect()
         v_r_rectangle.center = (
             robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 90)),
-            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 90))
+            robot.pos[1] - velocity_display_distance * math.sin(math.radians(robot.theta - 90))
         )
 
         window_surface.blit(v_l_text, v_l_rectangle)
