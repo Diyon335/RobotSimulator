@@ -19,8 +19,17 @@ walls = [
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
 velocity_display_distance = 20
 
+# Display the sensor's sensed distance a certain distance (pixels) away from the centre of the robot
+sensor_display_distance = 60
+
 
 def run(robot):
+    """
+    This runs the GUI for the robot simulator
+
+    :param robot: A robot object
+    :return: None
+    """
 
     pygame.init()
 
@@ -53,11 +62,12 @@ def run(robot):
                 robot.theta += 90
                 robot_image = pygame.transform.rotate(robot_image, 90)
 
-            # TODO: Change individual events to their respective functions
+            # TODO: Change individual events to their respective functions. For now it's just test stuff
             if event.type == pygame.KEYDOWN:
 
                 # +ve increment of left wheel speed
                 if event.key == pygame.K_w:
+                    robot.pos = (robot.pos[0], robot.pos[1] - 10)
                     robot.v_l += 10
 
                 # -ve increment of left wheel speed
@@ -114,5 +124,20 @@ def run(robot):
 
         window_surface.blit(v_l_text, v_l_rectangle)
         window_surface.blit(v_r_text, v_r_rectangle)
+
+        # TODO: Replace with actual sensor angles and distances
+        # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
+        sensors = [(0, "1"), (90, "2"), (180, "3")]
+
+        for sensor in sensors:
+            sensor_distance = font.render(sensor[1], True, "#000000")
+
+            sensor_rectangle = sensor_distance.get_rect()
+            sensor_rectangle.center = (
+                robot.pos[0] + sensor_display_distance * math.cos(math.radians(90 - sensor[0] - robot.theta)),
+                robot.pos[1] + sensor_display_distance * math.sin(math.radians(90 - sensor[0] - robot.theta))
+            )
+
+            window_surface.blit(sensor_distance, sensor_rectangle)
 
         pygame.display.update()
