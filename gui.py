@@ -25,7 +25,6 @@ sensor_display_distance = 60
 # By how much should the velocity of the wheels increase/decrease
 velocity_change = 1
 
-
 def run(robot):
     """
     This runs the GUI for the robot simulator
@@ -65,7 +64,7 @@ def run(robot):
             # TODO: so just update the position of the robot after all these if statements
             if event.type == pygame.MOUSEBUTTONDOWN:
                 robot.theta += 90
-                robot_image = pygame.transform.rotate(robot_image, 90)
+                robot_image = pygame.transform.rotate(robot_image, 60)
 
             # TODO: Change individual events to their respective functions. For now it's just test stuff
             if event.type == pygame.KEYDOWN:
@@ -133,6 +132,9 @@ def run(robot):
 
         window_surface.blit(v_l_text, v_l_rectangle)
         window_surface.blit(v_r_text, v_r_rectangle)
+
+        """This is just a test, this won't be here at the end"""
+        robot.sensors[0].sense_distance()
 
         # TODO: Replace with actual sensor angles and distances
         # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
