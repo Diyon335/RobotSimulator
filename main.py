@@ -20,7 +20,6 @@ robot_start = (450, 400)
 
 if __name__ == '__main__':
 
-    robot = Robot(1, robot_start, walls)
-    robot.generate_sensors(2)
+    robot = Robot(1, robot_start, walls, n_sensors=6)
     gui.run(robot)
 

@@ -1,62 +1,87 @@
 import math
 
 from sympy import Point, Line
+from gui import robot_size
 
-"""
-   Differential Drive Robot Object
-   Contains positional information about the robot as well as  
-"""
+
 class Robot:
+    """
+    Differential Drive Robot Object
+    Contains positional information about the robot as well as
+    """
 
     class Sensor:
+        """
+        Nested class for a sensor object
+        """
 
         def __init__(self, sensor_range, angle, robot):
+            """
+            Constructor for a sensor
+
+            :param sensor_range: Maximum detection range of the sensor
+            :param angle: Angle of placement on the robot's edge. The angle is with respect to the x-axis
+            :param robot: Robot object
+            """
 
             self.sensor_range = sensor_range
             self.angle = angle
             self.robot = robot
 
+            self.p1 = None
+            self.p2 = None
+
         def sense_distance(self):
+            """
+            Computes the distance from the edge of the robot to the nearest wall
+            """
 
-            """TODO: subract the radius to ending_x and ending_y parameters"""
+            radius = robot_size[0]/2
 
-            starting_point = Point(self.robot.pos[0], self.robot.pos[1])
-            ending_x = self.sensor_range * math.cos(math.radians(self.angle))
-            ending_y = self.robot.pos[1] + self.sensor_range * math.sin(math.radians(self.angle))
+            # The starting point is a radius's distance away from the centre of the robot, in the direction of the
+            # sensor's angle
+            starting_point = Point(self.robot.pos[0] + radius * math.cos(math.radians(self.angle)),
+                                   self.robot.pos[1] + radius * math.sin(math.radians(self.angle)))
+
+            # Ending point is the sensor's max distance away from from its starting point, in the direction of the
+            # sensor's angle
+            ending_x = starting_point.x + self.sensor_range * math.cos(math.radians(self.angle))
+            ending_y = starting_point.y + self.sensor_range * math.sin(math.radians(self.angle))
+
             ending_point = Point(ending_x, ending_y)
+
+            # Just to keep track of whether what we're doing is right
+            self.p1 = starting_point
+            self.p2 = ending_point
 
             sensor_detection_line = Line(starting_point, ending_point)
 
             distances_list = []
+
             for line in self.robot.room_map:
                 intersection_point_list = sensor_detection_line.intersection(line)
+
+                # If no intersection, then return its max range
+                if len(intersection_point_list) < 1:
+                    distances_list.append(self.sensor_range)
+                    continue
+
                 intersection_point = min(intersection_point_list)
-                if intersection_point != None:
+
+                if intersection_point is not None:
                     distances_list.append(starting_point.distance(intersection_point))
 
-            print("All collisions with a particular line ", intersection_point_list)
-
-            print("Minimum collision point with a particular line: ",intersection_point)
-
-            print("List of all minimum collision points ", distances_list)
-
-            print("Minimum collision point ", min(distances_list))
+            # print("All collisions with a particular line ", intersection_point_list)
+            #
+            # print("Minimum collision point with a particular line: ",intersection_point)
+            #
+            # print("List of all minimum collision points ", distances_list)
+            #
+            # print("Minimum collision point ", min(distances_list))
 
             return min(distances_list)
-            """
-            return sensor_range if (wall_line - (robot_centre + robot_radius)) > sensor_range \
-                    else (wall_line - (robot_centre + robot_radius))
-            """
 
-            """
-            Get sympy line for the wall
-            Create sympy line going from the sensor
-            Check intersection between the lines
-            Calculate distances from sensor to wall
-            Return the min distance
-            """
-
-    def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=0, n_sensors=12):
+    def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
         self.pos = pos
         self.v_l = v_l
@@ -91,12 +116,7 @@ class Robot:
 
     def generate_sensors(self, n_sensors):
 
-        sensors_list = []
-        sensor_1 = self.Sensor(10, 30, self)
-        sensor_2 = self.Sensor(10, 60, self)
-        sensors_list.append(sensor_1)
-        sensors_list.append(sensor_2)
-        return sensors_list
+        return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360/n_sensors))]
 
     def update_position(self):
         pass
