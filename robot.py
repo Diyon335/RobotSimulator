@@ -125,8 +125,19 @@ class Robot:
         # Remember that in the edge case: we have to recursively update position
 
         # Get new prospective position
-        new_pos = self.get_new_pos()
-        # Check if position is legal, update if not
+        new_pos_orient = self.get_new_pos()
+        new_theta = new_pos_orient[2]
+        new_pos = (new_pos_orient[0], new_pos_orient[1])
+        
+        # Recursive check for legal position
+        legal = False
+        while not legal:
+            new_pos, legal = self.correct_pos(new_pos)
+
+        # Set new position and orientation
+        self.pos = new_pos
+        self.theta = new_theta
+
 
         # Set new position
     
@@ -148,3 +159,28 @@ class Robot:
         theta_new = self.theta + omega 
 
         return x_new, y_new, theta_new
+
+    def correct_pos(self, new_pos):
+        # Checks if the new position of the robot is legal and returns a position
+        # that is more legal (guaranteed improvement but not guaranteed to be legal)
+
+        # Create sympy circle representing robot at new location, 
+        # and sympy line between old and new position
+        
+
+        # Check for intersections with map (both circle and line) store the intersection point
+        # and which line those intersections are associated with
+        
+        # If there are are no intersections: return new_pos, True
+
+        # Check which intersection with the map occurs closest to the robot's current position
+
+        # If the line is vertical (x1 = x2) shift the robots new x coordinate so that it lies one
+        # radius away from the line (in the direction of the robot)
+
+        # If the line is horizontal (y1 = y2) Shift the robots new y coordinate so that it lies one
+        # radius away from the line
+
+        #return (new_x, new_y), False
+
+        return new_pos, False
