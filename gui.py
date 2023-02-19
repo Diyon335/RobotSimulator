@@ -145,7 +145,7 @@ def run(robot):
         for sensor in sensors:
 
             # This is temporary, just to show the lines of the sensor's detection range
-            # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+            pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
 
             sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
 

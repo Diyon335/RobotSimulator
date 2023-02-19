@@ -60,6 +60,7 @@ class Robot:
             self.p1 = starting_point
             self.p2 = ending_point
 
+            # Changed Line -> Segment. Line results in errors when joining two points like this
             sensor_detection_line = Segment(starting_point, ending_point)
 
             distances_list = []
@@ -69,6 +70,7 @@ class Robot:
                 # Returns a list with possible intersections
                 intersection_points = sensor_detection_line.intersection(line)
 
+                # If no intersections, continue
                 if len(intersection_points) < 1:
                     continue
 
