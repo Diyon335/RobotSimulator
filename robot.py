@@ -2,6 +2,7 @@ import math
 
 from sympy import Point, Line, Segment
 from gui import robot_size, robot_border_size
+import numpy as np
 
 
 class Robot:
@@ -118,8 +119,32 @@ class Robot:
         return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360/n_sensors))]
 
     def update_position(self):
-        pass
         # TODO: Implement function to update the Robot position based on current position,
         # wheel velocities and environment
 
         # Remember that in the edge case: we have to recursively update position
+
+        # Get new prospective position
+        new_pos = self.get_new_pos()
+        # Check if position is legal, update if not
+
+        # Set new position
+    
+    def get_new_pos(self):
+        # 1: Calculate omega and R
+        l = robot_size[0]/2
+        R = (l/2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
+        omega = (self.v_r - self.v_l) / l
+        x = self.pos[0]
+        y = self.pos[1]
+
+        # 2: Calculate coordinates for ICC
+        ICC_x = x - R * np.sin(self.theta)
+        ICC_y = y + R * np.cos(self.theta)
+
+        # 3: Calculate new position and orientation of robot and return
+        x_new = (np.cos(omega) * (x - ICC_x) - np.sin(omega) * (y - ICC_y)) + ICC_x
+        y_new = (np.sin(omega) * (x - ICC_x) + np.cos(omega) * (y - ICC_y)) + ICC_y
+        theta_new = self.theta + omega 
+
+        return x_new, y_new, theta_new
