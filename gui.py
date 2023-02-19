@@ -9,6 +9,9 @@ window_size = (900, 800)
 change_robot_size = False
 robot_size = (107, 107)
 
+# Do not change. This is the width (in pixels) of the robot's outline
+robot_border_size = 4
+
 walls = [
     Line(Point(110, 90), Point(810, 90)),
     Line(Point(110, 90), Point(110, 710)),
@@ -62,6 +65,7 @@ def run(robot):
 
             # TODO: This is just for testing. Left click = 90 degree rotation counter clockwise
             if event.type == pygame.MOUSEBUTTONDOWN:
+                print(event)
                 robot.theta += 90
                 robot_image = pygame.transform.rotate(robot_image, 90)
 
@@ -141,7 +145,7 @@ def run(robot):
         for sensor in sensors:
 
             # This is temporary, just to show the lines of the sensor's detection range
-            pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+            # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
 
             sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
 
