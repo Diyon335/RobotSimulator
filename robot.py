@@ -1,7 +1,7 @@
 import math
 
-from sympy import Point, Line
-from gui import robot_size
+from sympy import Point, Line, Segment
+from gui import robot_size, robot_border_size
 
 
 class Robot:
@@ -28,7 +28,9 @@ class Robot:
             self.angle = angle
             self.robot = robot
 
+            # Starting point of sensor
             self.p1 = None
+            # Point until which it can see
             self.p2 = None
 
         def sense_distance(self):
@@ -38,10 +40,14 @@ class Robot:
 
             radius = robot_size[0]/2
 
-            # The starting point is a radius's distance away from the centre of the robot, in the direction of the
-            # sensor's angle
-            starting_point = Point(self.robot.pos[0] + radius * math.cos(math.radians(self.angle)),
-                                   self.robot.pos[1] + radius * math.sin(math.radians(self.angle)))
+            # The starting point is a radius's distance away from the centre of the robot minus the border of the
+            # robot's outline, in the direction of the sensor's angle
+            starting_point = Point(self.robot.pos[0] + radius * math.cos(math.radians(self.angle))
+                                   - robot_border_size * math.cos(math.radians(self.angle)),
+
+                                   self.robot.pos[1] + radius * math.sin(math.radians(self.angle))
+                                   - robot_border_size * math.sin(math.radians(self.angle))
+                                   )
 
             # Ending point is the sensor's max distance away from from its starting point, in the direction of the
             # sensor's angle
@@ -50,36 +56,28 @@ class Robot:
 
             ending_point = Point(ending_x, ending_y)
 
-            # Just to keep track of whether what we're doing is right
+            # To help plotting the sensor line on the GUI if needed
             self.p1 = starting_point
             self.p2 = ending_point
 
-            sensor_detection_line = Line(starting_point, ending_point)
+            sensor_detection_line = Segment(starting_point, ending_point)
 
             distances_list = []
 
             for line in self.robot.room_map:
-                intersection_point_list = sensor_detection_line.intersection(line)
 
-                # If no intersection, then return its max range
-                if len(intersection_point_list) < 1:
-                    distances_list.append(self.sensor_range)
+                # Returns a list with possible intersections
+                intersection_points = sensor_detection_line.intersection(line)
+
+                if len(intersection_points) < 1:
                     continue
 
-                intersection_point = min(intersection_point_list)
+                # Add distance of each intersection
+                for intersection in intersection_points:
+                    distances_list.append(starting_point.distance(intersection))
 
-                if intersection_point is not None:
-                    distances_list.append(starting_point.distance(intersection_point))
-
-            # print("All collisions with a particular line ", intersection_point_list)
-            #
-            # print("Minimum collision point with a particular line: ",intersection_point)
-            #
-            # print("List of all minimum collision points ", distances_list)
-            #
-            # print("Minimum collision point ", min(distances_list))
-
-            return min(distances_list)
+            # Return the sensor's max range if there are no intersections, else return the min distance
+            return self.sensor_range if len(distances_list) < 1 else min(distances_list)
 
     def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
@@ -115,7 +113,6 @@ class Robot:
         self.theta = theta
 
     def generate_sensors(self, n_sensors):
-
         return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360/n_sensors))]
 
     def update_position(self):
