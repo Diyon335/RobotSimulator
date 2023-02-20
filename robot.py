@@ -39,21 +39,18 @@ class Robot:
             Computes the distance from the edge of the robot to the nearest wall
             """
 
-            radius = robot_radius
-
-            # The starting point is a radius's distance away from the centre of the robot minus the border of the
-            # robot's outline, in the direction of the sensor's angle
-            starting_point = Point(self.robot.pos[0] + radius * math.cos(math.radians(self.angle))
-                                   - robot_border_size * math.cos(math.radians(self.angle)),
-
-                                   self.robot.pos[1] + radius * math.sin(math.radians(self.angle))
-                                   - robot_border_size * math.sin(math.radians(self.angle))
-                                   )
+            # The starting point is the robot's centre
+            starting_point = Point(self.robot.pos[0], self.robot.pos[1])
 
             # Ending point is the sensor's max distance away from from its starting point, in the direction of the
-            # sensor's angle
-            ending_x = starting_point.x + self.sensor_range * math.cos(math.radians(self.angle))
-            ending_y = starting_point.y + self.sensor_range * math.sin(math.radians(self.angle))
+            # sensor's angle plus the robot's radius
+            ending_x = starting_point[0] \
+                       + self.sensor_range * math.cos(math.radians(90 - self.robot.theta - self.angle)) \
+                       + robot_radius * math.cos(math.radians(90 - self.robot.theta - self.angle))
+
+            ending_y = starting_point[1] \
+                       + self.sensor_range * math.sin(math.radians(90 - self.robot.theta - self.angle)) \
+                       + robot_radius * math.sin(math.radians(90 - self.robot.theta - self.angle))
 
             ending_point = Point(ending_x, ending_y)
 
@@ -80,7 +77,7 @@ class Robot:
                     distances_list.append(starting_point.distance(intersection))
 
             # Return the sensor's max range if there are no intersections, else return the min distance
-            return self.sensor_range if len(distances_list) < 1 else min(distances_list)
+            return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
 
     def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
@@ -116,7 +113,7 @@ class Robot:
         self.theta = theta
 
     def generate_sensors(self, n_sensors):
-        return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360/n_sensors))]
+        return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360 / n_sensors))]
 
     def update_position(self):
         # TODO: Implement function to update the Robot position based on current position,
@@ -128,7 +125,7 @@ class Robot:
         new_pos_orient = self.get_new_pos()
         new_theta = new_pos_orient[2]
         new_pos = (new_pos_orient[0], new_pos_orient[1])
-        
+
         # Recursive check for legal position
         legal = False
         while not legal:
@@ -138,13 +135,12 @@ class Robot:
         self.pos = new_pos
         self.theta = new_theta
 
-
         # Set new position
 
     def get_new_pos(self):
         # 1: Calculate omega and R
         l = robot_radius
-        R = (l/2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
+        R = (l / 2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
         omega = (self.v_r - self.v_l) / l
         x = self.pos[0]
         y = self.pos[1]
@@ -156,7 +152,7 @@ class Robot:
         # 3: Calculate new position and orientation of robot and return
         x_new = (np.cos(omega) * (x - ICC_x) - np.sin(omega) * (y - ICC_y)) + ICC_x
         y_new = (np.sin(omega) * (x - ICC_x) + np.cos(omega) * (y - ICC_y)) + ICC_y
-        theta_new = self.theta + omega 
+        theta_new = self.theta + omega
 
         return x_new, y_new, theta_new
 
@@ -166,11 +162,10 @@ class Robot:
 
         # Create sympy circle representing robot at new location, 
         # and sympy line between old and new position
-        
 
         # Check for intersections with map (both circle and line) store the intersection point
         # and which line those intersections are associated with
-        
+
         # If there are are no intersections: return new_pos, True
 
         # Check which intersection with the map occurs closest to the robot's current position
@@ -181,6 +176,6 @@ class Robot:
         # If the line is horizontal (y1 = y2) Shift the robots new y coordinate so that it lies one
         # radius away from the line
 
-        #return (new_x, new_y), False
+        # return (new_x, new_y), False
 
         return new_pos, False
