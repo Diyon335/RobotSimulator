@@ -6,8 +6,7 @@ from sympy import Point, Line
 is_running = True
 window_size = (900, 800)
 
-change_robot_size = False
-robot_size = (107, 107)
+robot_radius = 52
 
 # Do not change. This is the width (in pixels) of the robot's outline
 robot_border_size = 4
@@ -47,13 +46,6 @@ def run(robot):
     background = pygame.Surface(window_size)
     background.fill(pygame.Color('#FFFFFF'))
 
-    robot_image = pygame.image.load("robot.png")
-
-    # Default size for the robot is 107x107 pixels. If this needs to be changed, set change_robot_size = True and
-    # update robot_size
-    if change_robot_size:
-        robot_image = pygame.transform.scale(robot_image, robot_size)
-
     global is_running
     while is_running:
 
@@ -66,15 +58,14 @@ def run(robot):
             # TODO: This is just for testing. Left click = 90 degree rotation counter clockwise
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(event)
-                robot.theta += 90
-                robot_image = pygame.transform.rotate(robot_image, 90)
+                robot.theta += 45
 
             # TODO: Change individual events to their respective functions. For now it's just test stuff
             if event.type == pygame.KEYDOWN:
 
                 # +ve increment of left wheel speed
                 if event.key == pygame.K_w:
-                    robot.pos = (robot.pos[0], robot.pos[1] - 10)
+                    robot.pos = (robot.pos[0] + 10, robot.pos[1])
                     robot.v_l += velocity_change
 
                 # -ve increment of left wheel speed
@@ -113,7 +104,16 @@ def run(robot):
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
-        window_surface.blit(robot_image, (robot.pos[0] - robot_size[0]/2, robot.pos[1] - robot_size[1]/2))
+
+        pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
+
+        robot_line_end = (robot.pos[0] + robot_radius * math.cos(math.radians(robot.theta))
+                          - robot_border_size * math.cos(math.radians(robot.theta)),
+
+                          robot.pos[1] - robot_radius * math.sin(math.radians(robot.theta))
+                          + robot_border_size * math.sin(math.radians(robot.theta)))
+
+        pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
         for wall in walls:
             pygame.draw.line(window_surface, "#000000", wall.p1, wall.p2, width=2)
