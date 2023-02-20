@@ -1,7 +1,7 @@
 import math
 
 from sympy import Point, Line, Segment
-from gui import robot_size, robot_border_size
+from gui import robot_radius, robot_border_size
 import numpy as np
 
 
@@ -39,7 +39,7 @@ class Robot:
             Computes the distance from the edge of the robot to the nearest wall
             """
 
-            radius = robot_size[0]/2
+            radius = robot_radius
 
             # The starting point is a radius's distance away from the centre of the robot minus the border of the
             # robot's outline, in the direction of the sensor's angle
@@ -140,10 +140,10 @@ class Robot:
 
 
         # Set new position
-    
+
     def get_new_pos(self):
         # 1: Calculate omega and R
-        l = robot_size[0]/2
+        l = robot_radius
         R = (l/2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
         omega = (self.v_r - self.v_l) / l
         x = self.pos[0]
