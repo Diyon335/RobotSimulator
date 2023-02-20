@@ -9,7 +9,7 @@ window_size = (900, 800)
 robot_radius = 52
 
 # Do not change. This is the width (in pixels) of the robot's outline
-robot_border_size = 4
+robot_border_size = 2
 
 walls = [
     Line(Point(110, 90), Point(810, 90)),
@@ -145,7 +145,7 @@ def run(robot):
         for sensor in sensors:
 
             # This is temporary, just to show the lines of the sensor's detection range
-            pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+            # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
 
             sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
 
