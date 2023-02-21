@@ -45,14 +45,14 @@ class Robot:
             # Ending point is the sensor's max distance away from from its starting point, in the direction of the
             # sensor's angle plus the robot's radius
             ending_x = starting_point[0] \
-                + self.sensor_range * math.cos(math.radians(90 - self.robot.theta - self.angle)) \
-                + robot_radius * math.cos(math.radians(90 - self.robot.theta - self.angle)) \
-                + robot_border_size * math.cos(math.radians(90 - self.robot.theta - self.angle))
+                + self.sensor_range * math.cos(math.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * math.cos(math.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * math.cos(math.radians(self.robot.theta - self.angle - 90))
 
             ending_y = starting_point[1] \
-                + self.sensor_range * math.sin(math.radians(90 - self.robot.theta - self.angle)) \
-                + robot_radius * math.sin(math.radians(90 - self.robot.theta - self.angle)) \
-                + robot_border_size * math.sin(math.radians(90 - self.robot.theta - self.angle))
+                + self.sensor_range * math.sin(math.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * math.sin(math.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * math.sin(math.radians(self.robot.theta - self.angle - 90))
 
             ending_point = Point(ending_x, ending_y)
 
