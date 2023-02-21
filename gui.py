@@ -95,7 +95,7 @@ def run(robot):
 
         pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
 
-        robot_line_end = (robot.pos[0] - robot_radius * math.cos(math.radians(robot.theta))
+        robot_line_end = (robot.pos[0] + robot_radius * math.cos(math.radians(robot.theta))
                           - robot_border_size * math.cos(math.radians(robot.theta)),
 
                           robot.pos[1] + robot_radius * math.sin(math.radians(robot.theta))
@@ -114,15 +114,17 @@ def run(robot):
 
         v_l_rectangle = v_l_text.get_rect()
         v_l_rectangle.center = (
-            robot.pos[0] - velocity_display_distance * math.cos(math.radians(90 - robot.theta)),
-            robot.pos[1] - velocity_display_distance * math.sin(math.radians(90 - robot.theta))
+            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 90)),
+            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 90))
         )
 
         v_r_rectangle = v_r_text.get_rect()
         v_r_rectangle.center = (
-            robot.pos[0] - velocity_display_distance * math.cos(math.radians(robot.theta + 90)),
+            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta + 90)),
             robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta + 90))
         )
+
+        print(robot.theta)
 
         window_surface.blit(v_l_text, v_l_rectangle)
         window_surface.blit(v_r_text, v_r_rectangle)
@@ -139,8 +141,8 @@ def run(robot):
 
             sensor_rectangle = sensor_distance.get_rect()
             sensor_rectangle.center = (
-                robot.pos[0] + sensor_display_distance * math.cos(math.radians(90 - sensor[0] - robot.theta)),
-                robot.pos[1] + sensor_display_distance * math.sin(math.radians(90 - sensor[0] - robot.theta))
+                robot.pos[0] + sensor_display_distance * math.cos(math.radians(robot.theta - 90 - sensor[0])),
+                robot.pos[1] + sensor_display_distance * math.sin(math.radians(robot.theta - 90 - sensor[0]))
             )
 
             window_surface.blit(sensor_distance, sensor_rectangle)
