@@ -1,6 +1,6 @@
 import math
 
-from sympy import Point, Line, Segment
+from sympy import Point, Line, Segment, Ellipse
 from gui import robot_radius, robot_border_size
 import numpy as np
 
@@ -118,7 +118,7 @@ class Robot:
         return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360 / n_sensors))]
 
     def update_position(self):
-        # TODO: Implement function to update the Robot position based on current position,
+        # Function to update the Robot position based on current position,
         # wheel velocities and environment
 
         # Remember that in the edge case: we have to recursively update position
@@ -142,6 +142,10 @@ class Robot:
     def get_new_pos(self):
         # 1: Calculate omega and R
         l = robot_radius
+        
+        if self.v_l == self.v_r:
+            return self.pos[0] + self.v_l * np.cos(self.theta), self.pos[1] + self.v_l * np.sin(self.theta), self.theta
+
         R = (l / 2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
         omega = (self.v_r - self.v_l) / l
         x = self.pos[0]
@@ -164,20 +168,51 @@ class Robot:
 
         # Create sympy circle representing robot at new location, 
         # and sympy line between old and new position
-
+        old_center = Point(self.pos[0], self.pos[1])
+        new_center = Point(new_pos[0], new_pos[1])
+        robot_circle = Ellipse(new_center, robot_radius)
+        travel_path = Segment(old_center, new_center)
+        
         # Check for intersections with map (both circle and line) store the intersection point
         # and which line those intersections are associated with
+        distances_dict = {}
+        
+        for line in self.room_map:
+            intersections_circle = robot_circle.intersection(line)
+            intersections_path = travel_path.intersection(line)
+            
+            if len(intersections_path) < 1 and len(intersections_circle) < 1:
+                continue
 
+            distances = []
+            for intersect in intersections_circle:
+                distances.append(old_center.distance(intersect))
+            
+            if len(intersections_path) > 0:
+                distances.append(old_center.distance(intersections_path[0]))
+            distances_dict[line] = min(distances)
         # If there are are no intersections: return new_pos, True
+        if not distances_dict:
+            return new_pos, True
 
         # Check which intersection with the map occurs closest to the robot's current position
-
+        closest_line = min(distances_dict, key=distances_dict.get)
         # If the line is vertical (x1 = x2) shift the robots new x coordinate so that it lies one
         # radius away from the line (in the direction of the robot)
 
         # If the line is horizontal (y1 = y2) Shift the robots new y coordinate so that it lies one
         # radius away from the line
-
-        # return (new_x, new_y), False
+        p1 = closest_line.p1
+        p2 = closest_line.p2
+        if p1[0] == p2[0]:
+            if self.pos[0] < p1[0]:
+                new_pos[0] = p1[0] - robot_radius
+            else:
+                new_pos[0] = p1[0] + robot_radius
+        elif p1[1] == p2[1]:
+            if self.pos[1] < p1[1]:
+                new_pos[1] = p1[1] - robot_radius
+            else:
+                new_pos[1] = p1[1] + robot_radius
 
         return new_pos, False
