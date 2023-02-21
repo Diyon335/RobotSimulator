@@ -45,14 +45,14 @@ class Robot:
             # Ending point is the sensor's max distance away from from its starting point, in the direction of the
             # sensor's angle plus the robot's radius
             ending_x = starting_point[0] \
-                + self.sensor_range * math.cos(math.radians(self.robot.theta - self.angle - 90)) \
-                + robot_radius * math.cos(math.radians(self.robot.theta - self.angle - 90)) \
-                + robot_border_size * math.cos(math.radians(self.robot.theta - self.angle - 90))
+                + self.sensor_range * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.cos(np.radians(self.robot.theta - self.angle - 90))
 
             ending_y = starting_point[1] \
-                + self.sensor_range * math.sin(math.radians(self.robot.theta - self.angle - 90)) \
-                + robot_radius * math.sin(math.radians(self.robot.theta - self.angle - 90)) \
-                + robot_border_size * math.sin(math.radians(self.robot.theta - self.angle - 90))
+                + self.sensor_range * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.sin(np.radians(self.robot.theta - self.angle - 90))
 
             ending_point = Point(ending_x, ending_y)
 
@@ -157,9 +157,9 @@ class Robot:
         ICC_y = y + R * np.cos(np.radians(self.theta))
 
         # 3: Calculate new position and orientation of robot and return
-        x_new = (np.cos(np.radians(omega)) * (x - ICC_x) - np.sin(np.radians(omega)) * (y - ICC_y)) + ICC_x
-        y_new = (np.sin(np.radians(omega)) * (x - ICC_x) + np.cos(np.radians(omega)) * (y - ICC_y)) + ICC_y
-        theta_new = self.theta - omega
+        x_new = (np.cos(omega) * (x - ICC_x) - np.sin(omega) * (y - ICC_y)) + ICC_x
+        y_new = (np.sin(omega) * (x - ICC_x) + np.cos(omega) * (y - ICC_y)) + ICC_y
+        theta_new = self.theta - np.degrees(omega)
 
         return x_new, y_new, theta_new
 
