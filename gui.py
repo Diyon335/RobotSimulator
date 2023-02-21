@@ -25,7 +25,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 2
+velocity_change = 10
 
 
 def run(robot):
@@ -95,11 +95,11 @@ def run(robot):
 
         pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
 
-        robot_line_end = (robot.pos[0] + robot_radius * math.cos(math.radians(robot.theta))
+        robot_line_end = (robot.pos[0] - robot_radius * math.cos(math.radians(robot.theta))
                           - robot_border_size * math.cos(math.radians(robot.theta)),
 
-                          robot.pos[1] - robot_radius * math.sin(math.radians(robot.theta))
-                          + robot_border_size * math.sin(math.radians(robot.theta)))
+                          robot.pos[1] + robot_radius * math.sin(math.radians(robot.theta))
+                          - robot_border_size * math.sin(math.radians(robot.theta)))
 
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
@@ -114,14 +114,14 @@ def run(robot):
 
         v_l_rectangle = v_l_text.get_rect()
         v_l_rectangle.center = (
-            robot.pos[0] + velocity_display_distance * math.cos(math.radians(90 + robot.theta)),
-            robot.pos[1] - velocity_display_distance * math.sin(math.radians(90 + robot.theta))
+            robot.pos[0] - velocity_display_distance * math.cos(math.radians(90 - robot.theta)),
+            robot.pos[1] - velocity_display_distance * math.sin(math.radians(90 - robot.theta))
         )
 
         v_r_rectangle = v_r_text.get_rect()
         v_r_rectangle.center = (
-            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 90)),
-            robot.pos[1] - velocity_display_distance * math.sin(math.radians(robot.theta - 90))
+            robot.pos[0] - velocity_display_distance * math.cos(math.radians(robot.theta + 90)),
+            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta + 90))
         )
 
         window_surface.blit(v_l_text, v_l_rectangle)
