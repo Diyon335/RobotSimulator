@@ -124,8 +124,6 @@ def run(robot):
             robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta + 90))
         )
 
-        print(robot.theta)
-
         window_surface.blit(v_l_text, v_l_rectangle)
         window_surface.blit(v_r_text, v_r_rectangle)
 
