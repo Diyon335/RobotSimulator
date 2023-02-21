@@ -204,15 +204,18 @@ class Robot:
         # radius away from the line
         p1 = closest_line.p1
         p2 = closest_line.p2
+
+        new_x = new_pos[0]
+        new_y = new_pos[1]
         if p1[0] == p2[0]:
             if self.pos[0] < p1[0]:
-                new_pos[0] = p1[0] - robot_radius
+                new_x = p1[0] - (robot_radius + 1)
             else:
-                new_pos[0] = p1[0] + robot_radius
+                new_x = p1[0] + (robot_radius + 1)
         elif p1[1] == p2[1]:
             if self.pos[1] < p1[1]:
-                new_pos[1] = p1[1] - robot_radius
+                new_y = p1[1] - (robot_radius + 1)
             else:
-                new_pos[1] = p1[1] + robot_radius
+                new_y = p1[1] + (robot_radius + 1)
 
-        return new_pos, False
+        return (new_x, new_y), False
