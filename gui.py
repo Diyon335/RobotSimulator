@@ -25,7 +25,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 1
+velocity_change = 2
 
 
 def run(robot):
@@ -55,17 +55,10 @@ def run(robot):
             if event.type == pygame.QUIT:
                 is_running = False
 
-            # TODO: This is just for testing. Left click = 90 degree rotation counter clockwise
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                print(event)
-                robot.theta += 45
-
-            # TODO: Change individual events to their respective functions. For now it's just test stuff
             if event.type == pygame.KEYDOWN:
 
                 # +ve increment of left wheel speed
                 if event.key == pygame.K_w:
-                    robot.pos = (robot.pos[0] + 10, robot.pos[1])
                     robot.v_l += velocity_change
 
                 # -ve increment of left wheel speed
@@ -95,12 +88,7 @@ def run(robot):
                     robot.v_l -= velocity_change
                     robot.v_r -= velocity_change
 
-        # TODO: Update robot's pos here + rotate png according to new theta. By how much should it rotate?
-        #  new theta - old theta
-
-        # old_theta = robot.theta
-        # robot.update_position()
-        # robot_image = pygame.transform.rotate(robot_image, robot.theta - old_theta)
+        robot.update_position()
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))

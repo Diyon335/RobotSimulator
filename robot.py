@@ -170,7 +170,7 @@ class Robot:
         # and sympy line between old and new position
         old_center = Point(self.pos[0], self.pos[1])
         new_center = Point(new_pos[0], new_pos[1])
-        robot_circle = Ellipse(new_center, robot_radius)
+        robot_circle = Ellipse(center=new_center, hradius=robot_radius, vradius=robot_radius)
         travel_path = Segment(old_center, new_center)
         
         # Check for intersections with map (both circle and line) store the intersection point
