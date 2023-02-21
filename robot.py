@@ -144,21 +144,22 @@ class Robot:
         l = robot_radius
         
         if self.v_l == self.v_r:
-            return self.pos[0] + self.v_l * np.cos(self.theta), self.pos[1] + self.v_l * np.sin(self.theta), self.theta
+            return self.pos[0] + self.v_l * np.cos(np.radians(self.theta)), \
+                   self.pos[1] + self.v_l * np.sin(np.radians(self.theta)), self.theta
 
-        R = (l / 2) * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
-        omega = (self.v_r - self.v_l) / l
+        R = l * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
+        omega = (self.v_r - self.v_l) / (l*2)
         x = self.pos[0]
         y = self.pos[1]
 
         # 2: Calculate coordinates for ICC
-        ICC_x = x - R * np.sin(self.theta)
-        ICC_y = y + R * np.cos(self.theta)
+        ICC_x = x - R * np.sin(np.radians(self.theta))
+        ICC_y = y + R * np.cos(np.radians(self.theta))
 
         # 3: Calculate new position and orientation of robot and return
-        x_new = (np.cos(omega) * (x - ICC_x) - np.sin(omega) * (y - ICC_y)) + ICC_x
-        y_new = (np.sin(omega) * (x - ICC_x) + np.cos(omega) * (y - ICC_y)) + ICC_y
-        theta_new = self.theta + omega
+        x_new = (np.cos(np.radians(omega)) * (x - ICC_x) - np.sin(np.radians(omega)) * (y - ICC_y)) + ICC_x
+        y_new = (np.sin(np.radians(omega)) * (x - ICC_x) + np.cos(np.radians(omega)) * (y - ICC_y)) + ICC_y
+        theta_new = self.theta - omega
 
         return x_new, y_new, theta_new
 
