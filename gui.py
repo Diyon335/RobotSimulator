@@ -1,5 +1,5 @@
 import math
-
+# VAFFACULO
 import pygame
 from sympy import Point, Line, Segment
 
