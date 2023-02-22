@@ -1,6 +1,7 @@
 import math
-# VAFFACULO
+
 import pygame
+import concurrent.futures
 from sympy import Point, Line, Segment
 
 is_running = True
@@ -130,19 +131,25 @@ def run(robot):
         # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
         sensors = [(sensor.angle, sensor.sense_distance(), sensor.p1, sensor.p2) for sensor in robot.sensors]
 
-        for sensor in sensors:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
 
-            # This is temporary, just to show the lines of the sensor's detection range
-            # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
-
-            sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
-
-            sensor_rectangle = sensor_distance.get_rect()
-            sensor_rectangle.center = (
-                robot.pos[0] + sensor_display_distance * math.cos(math.radians(robot.theta - 90 - sensor[0])),
-                robot.pos[1] + sensor_display_distance * math.sin(math.radians(robot.theta - 90 - sensor[0]))
-            )
-
-            window_surface.blit(sensor_distance, sensor_rectangle)
+            for sensor in sensors:
+                executor.submit(sensor_update, sensor, robot, font, window_surface)
 
         pygame.display.update()
+
+
+def sensor_update(sensor, robot, font, window_surface):
+
+    # This is temporary, just to show the lines of the sensor's detection range
+    # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+
+    sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
+
+    sensor_rectangle = sensor_distance.get_rect()
+    sensor_rectangle.center = (
+        robot.pos[0] + sensor_display_distance * math.cos(math.radians(robot.theta - 90 - sensor[0])),
+        robot.pos[1] + sensor_display_distance * math.sin(math.radians(robot.theta - 90 - sensor[0]))
+    )
+
+    window_surface.blit(sensor_distance, sensor_rectangle)
