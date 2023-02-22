@@ -236,3 +236,51 @@ class Robot:
                 new_y = p1[1] + (robot_radius + 1)
 
         return (new_x, new_y), False
+
+    def correct_pos2(self, old_pos, new_pos, theta):
+        """
+        A more robust collision detection method
+
+        First we check if the robot is currently crossing the line:
+        If it is, the robot's circle will have two intersection points with a wall. We obtain the mid point of these
+        two points. Call it x',y'. The robot's old centre before collision is x,y. Let the euclidean distance between
+        x,y and x',y' be called D. The robot's orientation is theta
+
+        The robot's new position x'', y'' will be:
+
+        x'' = x + x' - D * Cos(theta)
+        y'' = y + y' - D * Sin(theta)
+
+        Second, if the robot is too fast and fully crosses the line, then we check for the intersection of the line
+        between its old and new centre and a wall. The same formula applies
+
+        :param old_pos: Tuple of old position x,y
+        :param new_pos: Tuple of new position x',y'
+        :param theta: Angle in degrees of robot's orientation
+        :return: Returns a corrected x'' and y'' with a Boolean indicating whether it's a legal position or not
+        """
+
+        old_centre = Point(old_pos[0], old_pos[1])
+        new_centre = Point(new_pos[0], new_pos[1])
+        robot_circle = Ellipse(center=new_centre, hradius=robot_radius, vradius=robot_radius)
+
+        travelled_path = Segment(old_centre, new_centre)
+
+        circle_intersection_midpoints = []
+        line_intersections = []
+
+        for wall in self.room_map:
+
+            circle_intersection_points = robot_circle.intersection(wall)
+
+            if len(circle_intersection_points) == 2:
+                pass
+            else:
+                pass
+
+            line_intersections.append(travelled_path.intersection(wall))
+
+
+
+
+
