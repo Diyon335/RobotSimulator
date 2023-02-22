@@ -1,7 +1,7 @@
 import math
 
 import pygame
-from sympy import Point, Line
+from sympy import Point, Line, Segment
 
 is_running = True
 window_size = (900, 800)
@@ -12,10 +12,10 @@ robot_radius = 52
 robot_border_size = 2
 
 walls = [
-    Line(Point(110, 90), Point(810, 90)),
-    Line(Point(110, 90), Point(110, 710)),
-    Line(Point(110, 710), Point(810, 710)),
-    Line(Point(810, 710), Point(810, 90))
+    Segment(Point(110, 90), Point(810, 90)),
+    Segment(Point(110, 90), Point(110, 710)),
+    Segment(Point(110, 710), Point(810, 710)),
+    Segment(Point(810, 710), Point(810, 90))
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot

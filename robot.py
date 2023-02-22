@@ -197,7 +197,23 @@ class Robot:
             return new_pos, True
 
         # Check which intersection with the map occurs closest to the robot's current position
-        closest_line = min(distances_dict, key=distances_dict.get)
+        min_distance = min(distances_dict.values())
+        closest_lines = [key for key in distances_dict if distances_dict[key] == min_distance]
+        
+        # Further check in the case of intersecting at a corner to prevent illegal moves
+        closest_line = closest_lines[0]
+        if len(closest_lines) > 1:
+            for i in range(1, len(closest_lines)):
+                if closest_lines[i].distance(old_center) < closest_line.distance(old_center):
+                    closest_line = closest_lines[i]
+                
+        
+        
+        
+        #closest_line = min(distances_dict, key=distances_dict.get)
+
+
+
         # If the line is vertical (x1 = x2) shift the robots new x coordinate so that it lies one
         # radius away from the line (in the direction of the robot)
 
