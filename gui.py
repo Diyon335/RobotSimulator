@@ -16,6 +16,7 @@ walls = [
     Segment(Point(110, 90), Point(110, 710)),
     Segment(Point(110, 710), Point(810, 710)),
     Segment(Point(810, 710), Point(810, 90))
+    # Segment(Point(0, 0), Point(600, 400))
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot

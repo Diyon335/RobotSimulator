@@ -1,5 +1,3 @@
-import math
-
 from sympy import Point, Line, Segment, Ellipse
 from gui import robot_radius, robot_border_size
 import numpy as np
@@ -122,6 +120,7 @@ class Robot:
         # wheel velocities and environment
 
         # Remember that in the edge case: we have to recursively update position
+        old_pos = self.pos
 
         # Get new prospective position
         new_pos_orient = self.get_new_pos()
@@ -131,13 +130,12 @@ class Robot:
         # Recursive check for legal position
         legal = False
         while not legal:
-            new_pos, legal = self.correct_pos(new_pos)
+            # new_pos, legal = self.correct_pos(new_pos)
+            new_pos, legal = self.correct_pos2(old_pos, new_pos, new_theta)
 
         # Set new position and orientation
         self.pos = new_pos
         self.theta = new_theta
-
-        # Set new position
 
     def get_new_pos(self):
         # 1: Calculate omega and R
@@ -206,13 +204,8 @@ class Robot:
             for i in range(1, len(closest_lines)):
                 if closest_lines[i].distance(old_center) < closest_line.distance(old_center):
                     closest_line = closest_lines[i]
-                
-        
-        
-        
-        #closest_line = min(distances_dict, key=distances_dict.get)
 
-
+        # closest_line = min(distances_dict, key=distances_dict.get)
 
         # If the line is vertical (x1 = x2) shift the robots new x coordinate so that it lies one
         # radius away from the line (in the direction of the robot)
@@ -237,27 +230,33 @@ class Robot:
 
         return (new_x, new_y), False
 
-    def correct_pos2(self, old_pos, new_pos, theta):
+    def correct_pos2(self, old_pos, new_pos, new_theta):
         """
         A more robust collision detection method
 
         First we check if the robot is currently crossing the line:
-        If it is, the robot's circle will have two intersection points with a wall. We obtain the mid point of these
-        two points. Call it x',y'. The robot's old centre before collision is x,y. Let the euclidean distance between
-        x,y and x',y' be called D. The robot's orientation is theta
+        If it is, the robot's circle will either have two or one intersection(s) point(s) with a wall.
+        In the case of two points, we use the mid point. In case of one point per wall, we use the point itself.
 
-        The robot's new position x'', y'' will be:
+        With all found points we compute the minimum Euclidean distance from the intersections and the robot's
+        previous centre
 
-        x'' = x + x' - D * Cos(theta)
-        y'' = y + y' - D * Sin(theta)
+        Let the smallest Euclidean distance between the robot's previous centre and an intersection point be called D.
+        Let theta be the robot's angle of orientation after its position has been updated. Let R be the radius of the
+        robot. And finally, let the robot's previous centre be x, y
+
+        The robot's new position x', y' will be:
+
+        x' = x + D * Cos(theta) - R
+        y' = y + D * Cos(theta) - R
 
         Second, if the robot is too fast and fully crosses the line, then we check for the intersection of the line
-        between its old and new centre and a wall. The same formula applies
+        connecting its old and new centre and a wall. The same formula applies
 
-        :param old_pos: Tuple of old position x,y
-        :param new_pos: Tuple of new position x',y'
-        :param theta: Angle in degrees of robot's orientation
-        :return: Returns a corrected x'' and y'' with a Boolean indicating whether it's a legal position or not
+        :param old_pos: Tuple of old position (x_old, y_old)
+        :param new_pos: Tuple of new position (x_new, y_new)
+        :param new_theta: Angle in degrees of robot's orientation in its new position
+        :return: Returns a new position for the robot (x', y')
         """
 
         old_centre = Point(old_pos[0], old_pos[1])
@@ -266,21 +265,65 @@ class Robot:
 
         travelled_path = Segment(old_centre, new_centre)
 
-        circle_intersection_midpoints = []
-        line_intersections = []
+        circle_intersection_distances = []
+        line_intersections_distances = []
 
         for wall in self.room_map:
-
             circle_intersection_points = robot_circle.intersection(wall)
+            line_intersection_points = travelled_path.intersection(wall)
 
+            # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
+            if len(circle_intersection_points) < 1 and len(line_intersection_points) < 1:
+                continue
+
+            # Does the circle intersect at two points on the same wall? --> midpoint
             if len(circle_intersection_points) == 2:
-                pass
-            else:
-                pass
+                mid_point = circle_intersection_points[0].midpoint(circle_intersection_points[1])
 
-            line_intersections.append(travelled_path.intersection(wall))
+                circle_intersection_distances.append(old_centre.distance(mid_point))
 
+                # This info is enough to correct the position
+                continue
 
+            # Does the circle intersect just one point on the wall? Add it as a single point
+            if len(circle_intersection_points) == 1:
+                circle_intersection_distances.append(old_centre.distance(circle_intersection_points[0]))
 
+                # This info is enough to correct the position
+                continue
+
+            # If no circle intersections, there could be line intersections
+            for line_intersection_point in line_intersection_points:
+                line_intersections_distances.append(old_centre.distance(line_intersection_point))
+
+        # If no intersections with all walls, just return new pos
+        if len(circle_intersection_distances) < 1 and len(line_intersections_distances) < 1:
+            return new_pos, True
+
+        # First work with circle intersections, they're the easiest
+        if len(circle_intersection_distances) > 0:
+            min_distance = min(circle_intersection_distances)
+
+            return self.get_corrected_xy(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius), True
+
+        # If no circle intersections, then the line intersections are the only option
+        min_distance = min(line_intersections_distances)
+
+        return self.get_corrected_xy(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius), True
+
+    def get_corrected_xy(self, x, y, min_distance, new_theta, radius):
+        """
+        Returns the corrected x and y position of the robot
+
+        :param x: Robot's old x coord
+        :param y: Robot's old y coord
+        :param min_distance: Min distance between old centre and closest intersection point
+        :param new_theta: Robot's new angle of orientation after position update
+        :param radius: Radius of the robot
+        :return: Returns a tuple with the new x and y coord of the robot
+        """
+
+        return x + (min_distance - radius) * np.cos(np.radians(new_theta)), \
+               y + (min_distance - radius) * np.sin(np.radians(new_theta))
 
 
