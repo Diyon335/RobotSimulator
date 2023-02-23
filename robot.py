@@ -130,8 +130,8 @@ class Robot:
         # Recursive check for legal position
         legal = False
         while not legal:
-            # new_pos, legal = self.correct_pos(new_pos)
-            new_pos, legal = self.correct_pos2(old_pos, new_pos, new_theta)
+            new_pos, legal = self.correct_pos(new_pos)
+            # new_pos, legal = self.correct_pos2(old_pos, new_pos, new_theta)
 
         # Set new position and orientation
         self.pos = new_pos
