@@ -1,6 +1,10 @@
 from sympy import Point, Line, Segment, Ellipse
 from gui import robot_radius, robot_border_size
 import numpy as np
+import shapely
+from shapely.geometry import LineString
+from shapely.geometry import Point as SPoint
+from shapely.geometry import MultiPoint
 
 
 class Robot:
@@ -79,6 +83,56 @@ class Robot:
             # Return the sensor's max range if there are no intersections, else return the min distance
             return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
 
+        def sense_distance2(self):
+            """
+            Computes the distance from the edge of the robot to the nearest wall
+            """
+
+            # The starting point is the robot's centre
+            starting_point = SPoint(self.robot.pos)
+
+            # Ending point is the sensor's max distance away from from its starting point, in the direction of the
+            # sensor's angle plus the robot's radius
+            ending_x = starting_point.x \
+                + self.sensor_range * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.cos(np.radians(self.robot.theta - self.angle - 90))
+
+            ending_y = starting_point.y \
+                + self.sensor_range * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.sin(np.radians(self.robot.theta - self.angle - 90))
+
+            ending_point = SPoint((ending_x, ending_y))
+
+            # To help plotting the sensor line on the GUI if needed
+            self.p1 = starting_point
+            self.p2 = ending_point
+
+            # Changed Line -> Segment. Line results in errors when joining two points like this
+            sensor_detection_line = LineString([starting_point, ending_point])
+
+            distances_list = []
+
+            for line in self.robot.room_map:
+
+                # Returns a list with possible intersections
+                intersection_points = sensor_detection_line.intersection(line)
+
+                # If no intersections, continue
+                if intersection_points.is_empty:
+                    continue
+
+                if type(intersection_points) == SPoint:
+                    distances_list.append(starting_point.distance(intersection_points))
+
+                if type(intersection_points) == MultiPoint:
+                    for i in range(len(intersection_points.geoms)):
+                        distances_list.append(starting_point.distance(intersection_points.geoms[i]))
+
+            # Return the sensor's max range if there are no intersections, else return the min distance
+            return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
+
     def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
         self.pos = pos
@@ -130,8 +184,8 @@ class Robot:
         # Recursive check for legal position
         legal = False
         while not legal:
-            new_pos, legal = self.correct_pos(new_pos)
-            # new_pos, legal = self.correct_pos2(old_pos, new_pos, new_theta)
+            #new_pos, legal = self.correct_pos(new_pos)
+            new_pos, legal = self.correct_pos3(old_pos, new_pos, new_theta)
 
         # Set new position and orientation
         self.pos = new_pos
@@ -309,6 +363,79 @@ class Robot:
         # If no circle intersections, then the line intersections are the only option
         min_distance = min(line_intersections_distances)
 
+        return self.get_corrected_xy(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius), True
+
+    def correct_pos3(self, old_pos, new_pos, new_theta):
+
+        old_centre = SPoint(old_pos)
+        new_centre = SPoint(new_pos)
+        robot_circle = new_centre.buffer(robot_radius).boundary
+
+        travelled_path = LineString([old_pos, new_pos])
+
+        circle_intersection_distances = []
+        line_intersections_distances = []
+
+        for wall in self.room_map:
+            circle_intersection_points = robot_circle.intersection(wall)
+            line_intersection_points = travelled_path.intersection(wall)
+
+            # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
+            if circle_intersection_points.is_empty and line_intersection_points.is_empty:
+                continue
+
+            # Does the circle intersect at two points on the same wall? --> midpoint
+            if type(circle_intersection_points) is MultiPoint:
+
+                if len(circle_intersection_points.geoms) == 2:
+
+                    p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
+                    p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
+
+                    mid_x = (p1.x + p2.x)/2
+                    mid_y = (p1.y + p2.y)/2
+
+                    mid_point = SPoint((mid_x, mid_y))
+                    circle_intersection_distances.append(old_centre.distance(mid_point))
+
+                    # This info is enough to correct the position
+                    continue
+
+                # Does the circle intersect just one point on the wall? Add it as a single point
+                if len(circle_intersection_points.geoms) == 1:
+                    circle_intersection_distances.append(old_centre.distance(circle_intersection_points[0]))
+
+                    # This info is enough to correct the position
+                    continue
+
+            # If no circle intersections, there could be line intersections
+            if line_intersection_points.is_empty:
+                continue
+
+            # If a single point
+            if type(line_intersection_points) == SPoint:
+                line_intersections_distances.append(old_centre.distance(line_intersection_points))
+
+            # If multiple points - very rare case
+            if type(line_intersection_points) == MultiPoint:
+
+                for i in range(len(line_intersection_points.geoms)):
+
+                    line_intersections_distances.append(old_centre.distance(line_intersection_points.geoms[i]))
+
+        # If no intersections with all walls, just return new pos
+        if len(circle_intersection_distances) < 1 and len(line_intersections_distances) < 1:
+            return new_pos, True
+
+        # First work with circle intersections, they're the easiest
+        if len(circle_intersection_distances) > 0:
+            min_distance = min(circle_intersection_distances)
+            print(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius)
+            return self.get_corrected_xy(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius), True
+
+        # If no circle intersections, then the line intersections are the only option
+        min_distance = min(line_intersections_distances)
+        print(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius)
         return self.get_corrected_xy(old_pos[0], old_pos[1], min_distance, new_theta, robot_radius), True
 
     def get_corrected_xy(self, x, y, min_distance, new_theta, radius):
