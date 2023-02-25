@@ -24,6 +24,8 @@ walls = [
     LineString([(110, 90), (110, 710)]),
     LineString([(110, 710), (810, 710)]),
     LineString([(810, 710), (810, 90)])
+# LineString([(400, 300), (810, 90)])
+#LineString([(400, 300),(0, 0)])
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
@@ -33,7 +35,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 10
+velocity_change = 1
 
 
 def run(robot):
