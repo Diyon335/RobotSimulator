@@ -288,6 +288,24 @@ class Robot:
         return (new_x, new_y), False
 
     def correct_pos2(self, old_pos, new_pos):
+        """
+        Corrects the new centre of the robot the following way:
+
+        First check for circle intersections as they're the most likely to happen first. Get the point(s) of
+        intersection with the wall, and get the midpoint of these intersection points. The shortest distance from
+        the point to the circle is called distance "m". Let the angle between the line connecting the new centre
+        and the midpoint, and the horizontal line be called Beta. Therefore the new centre of the robot is
+
+        x = x - m*Cos(Beta)
+        y = y - m*Sin(Beta)
+
+        If the robot is too fast, we draw a line between the two centres of the circle.
+        For the line intersection, the centre of the circle is moved from the intersection point.
+
+        :param old_pos: Tuple indicating old position
+        :param new_pos: Tuple indicating new position
+        :return: Tuple with corrected position
+        """
 
         old_centre = SPoint(old_pos)
         new_centre = SPoint(new_pos)
@@ -318,7 +336,7 @@ class Robot:
                     mid_y = (p1.y + p2.y)/2
 
                     mid_point = SPoint((mid_x, mid_y))
-                    distance_to_point = old_centre.distance(mid_point)
+                    distance_to_point = new_centre.distance(mid_point)
                     circle_distances[distance_to_point] = mid_point
 
                     # This info is enough to correct the position
@@ -327,7 +345,7 @@ class Robot:
             # Does the circle intersect just one point on the wall? Add it as a single point
             if type(circle_intersection_points) == SPoint:
 
-                distance_to_point = old_centre.distance(circle_intersection_points)
+                distance_to_point = new_centre.distance(circle_intersection_points)
                 circle_distances[distance_to_point] = circle_intersection_points
 
                 # This info is enough to correct the position
@@ -361,7 +379,7 @@ class Robot:
 
             shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
-            return self.get_corrected_xy_circle(shortest_line_inclination, minimum_distance), True
+            return self.get_corrected_xy_circle(new_pos, shortest_line_inclination, minimum_distance), True
 
         # The only remaining case is line intersections
         minimum_distance = min(line_distances.keys())
@@ -374,7 +392,7 @@ class Robot:
     def get_corrected_xy_line(self, closest_point, shortest_line_inclination, min_dist):
 
         x, y = closest_point.x, closest_point.y
-        angle_between = np.radians(self.theta) + shortest_line_inclination
+        angle_between = np.radians(self.theta) - shortest_line_inclination
 
         m = robot_radius + robot_border_size - min_dist
 
@@ -382,9 +400,16 @@ class Robot:
         y_offset = m * np.sin(angle_between)
         return x + x_offset, y + y_offset
 
-    def get_corrected_xy_circle(self, shortest_line_inclination, min_dist):
+    def get_corrected_xy_circle(self, new_pos, shortest_line_inclination, min_dist):
+        """
+        Gets the corrected position
 
-        x, y = self.pos
+        :param new_pos: New position of the robot
+        :param shortest_line_inclination: Inclination angle of shortest line, in RADIANS
+        :param min_dist: Integer indicating the minimum distance from centre to intersection
+        :return:
+        """
+        x, y = new_pos
         m = robot_radius + robot_border_size - min_dist
 
         x_offset = -m * np.cos(shortest_line_inclination)
@@ -393,6 +418,13 @@ class Robot:
         return x + x_offset, y + y_offset
 
     def get_shortest_line_inclination(self, intersection_point):
+        """
+        The shortest line is the one that connects the centre of the robot and an intersection point. This function
+        returns its inclination with respect to the positive x-axis in the clockwise direction
+
+        :param intersection_point: SPoint object for the intersection point
+        :return: An angle in RADIANS
+        """
         x1, y1 = self.pos
         x2, y2 = intersection_point.x, intersection_point.y
         direction_vector = [x2 - x1, y2 - y1]
