@@ -1,10 +1,9 @@
-from sympy import Point, Line, Segment, Ellipse
+from sympy import Point, Segment, Ellipse
 from gui import robot_radius, robot_border_size
 import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import Point as SPoint
 from shapely.geometry import MultiPoint
-import sys
 
 horizontal_vector = [1, 0]
 
@@ -379,7 +378,7 @@ class Robot:
 
             shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
-            return self.get_corrected_xy_circle(new_pos, shortest_line_inclination, minimum_distance), True
+            return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
         # The only remaining case is line intersections
         minimum_distance = min(line_distances.keys())
@@ -387,35 +386,41 @@ class Robot:
 
         shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
-        return self.get_corrected_xy_line(closest_point, shortest_line_inclination, minimum_distance), True
+        # return self.get_corrected_xy_line(closest_point, shortest_line_inclination, minimum_distance), True
+        return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
-    def get_corrected_xy_line(self, closest_point, shortest_line_inclination, min_dist):
-
-        x, y = closest_point.x, closest_point.y
-        angle_between = np.radians(self.theta) - shortest_line_inclination
-
-        m = robot_radius + robot_border_size - min_dist
-
-        x_offset = m * np.cos(angle_between)
-        y_offset = m * np.sin(angle_between)
-        return x + x_offset, y + y_offset
-
-    def get_corrected_xy_circle(self, new_pos, shortest_line_inclination, min_dist):
+    def get_corrected_xy(self, intersection_point, shortest_line_inclination):
         """
-        Gets the corrected position
+        Gets the corrected centre position of the robot
 
-        :param new_pos: New position of the robot
-        :param shortest_line_inclination: Inclination angle of shortest line, in RADIANS
-        :param min_dist: Integer indicating the minimum distance from centre to intersection
-        :return:
+        :param intersection_point: SPoint object indicating the closest intersection point
+        :param shortest_line_inclination: The inclination of the line connecting the robot's centre to the
+        intersection point
+        :return: A tuple of integers indicating the robot's new centre (x, y)
         """
-        x, y = new_pos
-        m = robot_radius + robot_border_size - min_dist
 
-        x_offset = -m * np.cos(shortest_line_inclination)
-        y_offset = -m * np.sin(shortest_line_inclination)
+        x, y = intersection_point.x, intersection_point.y
 
-        return x + x_offset, y + y_offset
+        # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
+        # intersection point
+        x_offset = -(robot_radius + robot_border_size) * np.cos(shortest_line_inclination)
+        y_offset = -(robot_radius + robot_border_size) * np.sin(shortest_line_inclination)
+
+        # This will be the new centre, but we need to induce some sliding
+        new_x, new_y = x + x_offset, y + y_offset
+
+        # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
+        increase_x = 1 if np.abs(y - new_y) > 0 else 0
+        increase_y = 1 if np.abs(x - new_x) > 0 else 0
+
+        # This is by how much the new centre will slide
+        x_component = 2 * np.cos(np.radians(self.theta)) * increase_x
+        y_component = 2 * np.sin(np.radians(self.theta)) * increase_y
+
+        x_final = new_x + x_component
+        y_final = new_y + y_component
+
+        return x_final, y_final
 
     def get_shortest_line_inclination(self, intersection_point):
         """
@@ -425,12 +430,17 @@ class Robot:
         :param intersection_point: SPoint object for the intersection point
         :return: An angle in RADIANS
         """
+
+        # Create a vector going from the centre to the nearest intersection point
         x1, y1 = self.pos
         x2, y2 = intersection_point.x, intersection_point.y
         direction_vector = [x2 - x1, y2 - y1]
 
+        # This is an indication whether this vector points up or down. Since theta is measured clockwise, a vector
+        # pointing up should return a positive angle. A vector pointing down means a negative angle
         shortest_line_points_up = y2 - y1 > 0
 
+        # Normalise the vectors and compute the dot product
         unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
         unit_vector_2 = direction_vector / np.linalg.norm(direction_vector)
         dot_product = np.dot(unit_vector_1, unit_vector_2)
