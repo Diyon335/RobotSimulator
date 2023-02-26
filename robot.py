@@ -181,14 +181,14 @@ class Robot:
         new_pos_orient = self.get_new_pos()
         new_theta = new_pos_orient[2]
         new_pos = (new_pos_orient[0], new_pos_orient[1])
-        print(f"This was the old position: {old_pos}")
+
         # Recursive check for legal position
         legal = False
         while not legal:
+
             #new_pos, legal = self.correct_pos(new_pos)
             new_pos, legal = self.correct_pos2(old_pos, new_pos)
 
-        print(f"This is the new position after everything: {new_pos}")
         # Set new position and orientation
         self.pos = new_pos
         self.theta = new_theta
