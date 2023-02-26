@@ -186,9 +186,9 @@ class Robot:
         legal = False
         while not legal:
 
-            #new_pos, legal = self.correct_pos(new_pos)
-            #new_pos, legal = self.correct_pos2(old_pos, new_pos)
-            new_pos, legal = self.correct_pos_shapely(new_pos)
+            # new_pos, legal = self.correct_pos(new_pos)
+            new_pos, legal = self.correct_pos2(old_pos, new_pos)
+            # new_pos, legal = self.correct_pos_shapely(new_pos)
 
         # Set new position and orientation
         self.pos = new_pos
@@ -318,7 +318,6 @@ class Robot:
         if not distances_dict:
             return new_pos, True
 
-        
         # Check which intersection with the map occurs closest to the robot's current position
         min_distance = min(distances_dict.values())
         closest_lines = [key for key in distances_dict if distances_dict[key] == min_distance]
@@ -352,16 +351,32 @@ class Robot:
         """
         Corrects the new centre of the robot the following way:
 
-        First check for circle intersections as they're the most likely to happen first. Get the point(s) of
-        intersection with the wall, and get the midpoint of these intersection points. The shortest distance from
-        the point to the circle is called distance "m". Let the angle between the line connecting the new centre
-        and the midpoint, and the horizontal line be called Beta. Therefore the new centre of the robot is
+        First we check for circle intersections. If there's an intersection with one wall, there will be two points
+        of contact. The mid point, m, of these two points of contact is the point that is the shortest distance away
+        from the centre of the robot. Let the line that joins the centre of the robot and m, be called l. Let angle
+        of inclination of l wrt to the positive x-axis be called alpha. The amount that the robot must slide in the
+        direction is moves is a constant component/fraction of its radius. In this case, the constant is set to 2.
 
-        x = x - m*Cos(Beta)
-        y = y - m*Sin(Beta)
+        Therefore the final corrected position of the robot will be:
 
-        If the robot is too fast, we draw a line between the two centres of the circle.
-        For the line intersection, the centre of the circle is moved from the intersection point.
+        new_pos = new_pos + pos_offset + sliding_component
+
+        Where the offsets are given by:
+
+        x_offset = -R * np.cos(alpha)
+        y_offset = -R * np.sin(alpha)
+
+        And the sliding components are:
+
+        x_slide = 2 * np.cos(theta)
+        y_slide = 2 * np.sin(theta)
+
+        If the circle intersects two walls (a corner where the robot is trapped within), it will take the average
+        of the two suggested positions
+
+        In the case that the robot fully crosses a wall, a line is drawn between the centres of the two positions of the
+        robot. The above equations apply the same way where m is the point of intersection where l2 meets the closest
+        wall
 
         :param old_pos: Tuple indicating old position
         :param new_pos: Tuple indicating new position
@@ -435,6 +450,23 @@ class Robot:
 
         # First check circle possible circle intersections
         if len(circle_distances) > 0:
+
+            # Case of a corner where the robot is trapped
+            if len(circle_distances) == 2:
+
+                average_x = []
+                average_y = []
+
+                for distance in circle_distances:
+                    closest_point = circle_distances[distance]
+                    shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+
+                    x, y = self.get_corrected_xy(closest_point, shortest_line_inclination)
+                    average_x.append(x)
+                    average_y.append(y)
+
+                return (np.mean(average_x), np.mean(average_y)), True
+
             minimum_distance = min(circle_distances.keys())
             closest_point = circle_distances[minimum_distance]
 
@@ -448,7 +480,6 @@ class Robot:
 
         shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
-        # return self.get_corrected_xy_line(closest_point, shortest_line_inclination, minimum_distance), True
         return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
     def get_corrected_xy(self, intersection_point, shortest_line_inclination):

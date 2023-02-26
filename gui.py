@@ -1,7 +1,6 @@
 import math
 
 import pygame
-from sympy import Point, Line, Segment
 from shapely.geometry import LineString
 
 is_running = True
@@ -12,25 +11,25 @@ robot_radius = 52
 # Do not change. This is the width (in pixels) of the robot's outline
 robot_border_size = 2
 
-# walls = [
-#     Segment(Point(110, 90), Point(810, 90)),
-#     Segment(Point(110, 90), Point(110, 710)),
-#     Segment(Point(110, 710), Point(810, 710)),
-#     Segment(Point(810, 710), Point(810, 90))
-# ]
-
 walls = [
+    # Standard walls
     LineString([(110, 90), (810, 90)]),
     LineString([(110, 90), (110, 710)]),
     LineString([(110, 710), (810, 710)]),
     LineString([(810, 710), (810, 90)])
 
-# LineString([(400, 300), (810, 90)])
-# LineString([(400, 300),(0, 0)])
+    # Upward slope
+    # LineString([(400, 300), (810, 90)])
 
-# LineString([(450, 600), (200, 710)]),
-# LineString([(450, 600), (600, 710)])
-    # LineString([(450, 600), (200, 600)]), 
+    # Downward slope
+    # LineString([(400, 300),(0, 0)])
+
+    # Outward corner
+    # LineString([(450, 600), (200, 710)]),
+    # LineString([(450, 600), (600, 710)])
+
+    # Outward corner
+    # LineString([(450, 600), (200, 600)]),
     # LineString([(450, 600), (450, 800)])
 ]
 
