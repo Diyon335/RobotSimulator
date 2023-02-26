@@ -187,7 +187,8 @@ class Robot:
         while not legal:
 
             #new_pos, legal = self.correct_pos(new_pos)
-            new_pos, legal = self.correct_pos2(old_pos, new_pos)
+            #new_pos, legal = self.correct_pos2(old_pos, new_pos)
+            new_pos, legal = self.correct_pos_shapely(new_pos)
 
         # Set new position and orientation
         self.pos = new_pos
@@ -270,6 +271,67 @@ class Robot:
         # radius away from the line
         p1 = closest_line.p1
         p2 = closest_line.p2
+
+        new_x = new_pos[0]
+        new_y = new_pos[1]
+        if p1[0] == p2[0]:
+            if self.pos[0] < p1[0]:
+                new_x = p1[0] - (robot_radius + 1)
+            else:
+                new_x = p1[0] + (robot_radius + 1)
+        elif p1[1] == p2[1]:
+            if self.pos[1] < p1[1]:
+                new_y = p1[1] - (robot_radius + 1)
+            else:
+                new_y = p1[1] + (robot_radius + 1)
+
+        return (new_x, new_y), False
+    
+    def correct_pos_shapely(self, new_pos):
+        old_center = SPoint(self.pos)
+        new_center = SPoint(new_pos)
+        robot_circle = new_center.buffer(robot_radius).boundary
+
+        travel_path = LineString([self.pos, new_pos])
+        
+        distances_dict = {}
+        for wall in self.room_map:
+            circle_intersections = robot_circle.intersection(wall)
+            line_intersections = travel_path.intersection(wall)
+            if circle_intersections.is_empty and line_intersections.is_empty:
+                continue
+            
+            distances = []
+            if type(circle_intersections) is MultiPoint:
+                
+                for p in circle_intersections.geoms:
+                    distances.append(old_center.distance(p))
+            elif type(circle_intersections) is SPoint:
+                distances.append(old_center.distance(circle_intersections))
+            
+            if type(line_intersections) is SPoint:
+                distances.append(old_center.distance(line_intersections))
+            elif type(line_intersections) is MultiPoint:
+                distances.append(old_center.distance(wall))
+            distances_dict[wall] = min(distances)
+        
+        if not distances_dict:
+            return new_pos, True
+
+        
+        # Check which intersection with the map occurs closest to the robot's current position
+        min_distance = min(distances_dict.values())
+        closest_lines = [key for key in distances_dict if distances_dict[key] == min_distance]
+
+        # Further check in the case of intersecting at a corner to prevent illegal moves
+        closest_line = closest_lines[0]
+        if len(closest_lines) > 1:
+            for i in range(1, len(closest_lines)):
+                if closest_lines[i].distance(old_center) < closest_line.distance(old_center):
+                    closest_line = closest_lines[i]
+
+        p1 = (list(closest_line.coords)[0][0],  list(closest_line.coords)[0][1])
+        p2 = (list(closest_line.coords)[1][0],  list(closest_line.coords)[1][1])
 
         new_x = new_pos[0]
         new_y = new_pos[1]

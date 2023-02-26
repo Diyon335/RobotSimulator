@@ -30,6 +30,8 @@ walls = [
 
 # LineString([(450, 600), (200, 710)]),
 # LineString([(450, 600), (600, 710)])
+    # LineString([(450, 600), (200, 600)]), 
+    # LineString([(450, 600), (450, 800)])
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
