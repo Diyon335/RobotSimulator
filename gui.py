@@ -1,3 +1,15 @@
+"""
+Autonomous Robotic Systems (2223-KEN4114)
+Assignment 2: Robot Simulator
+
+@authors:
+Diyon Wickrameratne (i6176139)
+Luca Forte (I6330944)
+Olmo Denegri (i6333396)
+Florent Didascalou (i6337071)
+"""
+
+
 import math
 
 import pygame
@@ -13,10 +25,10 @@ robot_border_size = 2
 
 walls = [
     # Standard walls
-    # LineString([(110, 90), (810, 90)]),
-    # LineString([(110, 90), (110, 710)]),
-    # LineString([(110, 710), (810, 710)]),
-    # LineString([(810, 710), (810, 90)])
+    LineString([(110, 90), (810, 90)]),
+    LineString([(110, 90), (110, 710)]),
+    LineString([(110, 710), (810, 710)]),
+    LineString([(810, 710), (810, 90)])
 
     # Upward slope
     # LineString([(400, 300), (810, 90)])
@@ -29,8 +41,8 @@ walls = [
     # LineString([(450, 600), (600, 710)])
 
     # Outward corner
-    LineString([(450, 600), (200, 600)]),
-    LineString([(450, 600), (450, 800)])
+    # LineString([(450, 600), (200, 600)]),
+    # LineString([(450, 600), (450, 800)])
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
