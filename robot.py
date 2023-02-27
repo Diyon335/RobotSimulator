@@ -462,22 +462,6 @@ class Robot:
         # First check circle possible circle intersections
         if len(circle_distances) > 0:
 
-            # # Case of a corner where the robot is trapped
-            # if len(circle_distances) == 2:
-            #
-            #     average_x = []
-            #     average_y = []
-            #
-            #     for distance in circle_distances:
-            #         closest_point = circle_distances[distance]
-            #         shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
-            #
-            #         x, y = self.get_corrected_xy(closest_point, shortest_line_inclination)
-            #         average_x.append(x)
-            #         average_y.append(y)
-            #
-            #     return (np.mean(average_x), np.mean(average_y)), True
-
             distances = list(circle_distances.keys())
 
             if len(distances) == 1:
@@ -489,6 +473,7 @@ class Robot:
 
                 return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
+            # If it collides with two or more walls, we want the two closest walls
             if len(distances) > 1:
 
                 distances.sort()
@@ -498,17 +483,12 @@ class Robot:
                 points = [p1, p2]
                 x, y = [], []
 
+                # The new position will be the average of both walls' corrections
                 for point in points:
                     shortest_line_inclination = self.get_shortest_line_inclination(point)
                     est_x, est_y = self.get_corrected_xy(point, shortest_line_inclination, induce_sliding=False)
                     x.append(est_x)
                     y.append(est_y)
-
-                # closest_point = SPoint(int((p1.x + p2.x)/2), int((p1.y + p2.y)/2))
-                # print(closest_point)
-                # # closest_point = wall1.intersection(wall2)
-                # shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
-                # excess_distance = -robot_radius + distances[0]
 
                 return (np.mean(x), np.mean(y)), True
 
@@ -524,6 +504,7 @@ class Robot:
         """
         Gets the corrected centre position of the robot
 
+        :param induce_sliding: A boolean indicating whether the robot should slide
         :param intersection_point: SPoint object indicating the closest intersection point
         :param shortest_line_inclination: The inclination of the line connecting the robot's centre to the
         intersection point
