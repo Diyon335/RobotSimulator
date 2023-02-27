@@ -413,7 +413,7 @@ class Robot:
 
                     mid_point = SPoint((mid_x, mid_y))
                     distance_to_point = new_centre.distance(mid_point)
-                    circle_distances[distance_to_point] = mid_point
+                    circle_distances[distance_to_point] = mid_point, wall
 
                     # This info is enough to correct the position
                     continue
@@ -422,7 +422,7 @@ class Robot:
             if type(circle_intersection_points) == SPoint:
 
                 distance_to_point = new_centre.distance(circle_intersection_points)
-                circle_distances[distance_to_point] = circle_intersection_points
+                circle_distances[distance_to_point] = circle_intersection_points, wall
 
                 # This info is enough to correct the position
                 continue
@@ -434,7 +434,7 @@ class Robot:
             # If a single point
             if type(line_intersection_points) == SPoint:
                 distance_to_point = old_centre.distance(line_intersection_points)
-                line_distances[distance_to_point] = line_intersection_points
+                line_distances[distance_to_point] = line_intersection_points, wall
 
             # If multiple points - very rare case
             if type(line_intersection_points) == MultiPoint:
@@ -442,7 +442,7 @@ class Robot:
                 for i in range(len(line_intersection_points.geoms)):
 
                     distance_to_point = old_centre.distance(line_intersection_points.geoms[i])
-                    line_distances[distance_to_point] = line_intersection_points.geoms[i]
+                    line_distances[distance_to_point] = line_intersection_points.geoms[i], wall
 
         # If no intersections with all walls, just return new pos
         if len(circle_distances) < 1 and len(line_distances) < 1:
@@ -451,38 +451,65 @@ class Robot:
         # First check circle possible circle intersections
         if len(circle_distances) > 0:
 
-            # Case of a corner where the robot is trapped
-            if len(circle_distances) == 2:
+            # # Case of a corner where the robot is trapped
+            # if len(circle_distances) == 2:
+            #
+            #     average_x = []
+            #     average_y = []
+            #
+            #     for distance in circle_distances:
+            #         closest_point = circle_distances[distance]
+            #         shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+            #
+            #         x, y = self.get_corrected_xy(closest_point, shortest_line_inclination)
+            #         average_x.append(x)
+            #         average_y.append(y)
+            #
+            #     return (np.mean(average_x), np.mean(average_y)), True
 
-                average_x = []
-                average_y = []
+            distances = list(circle_distances.keys())
 
-                for distance in circle_distances:
-                    closest_point = circle_distances[distance]
-                    shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+            if len(distances) == 1:
 
-                    x, y = self.get_corrected_xy(closest_point, shortest_line_inclination)
-                    average_x.append(x)
-                    average_y.append(y)
+                minimum_distance = min(circle_distances.keys())
+                closest_point, wall = circle_distances[minimum_distance]
 
-                return (np.mean(average_x), np.mean(average_y)), True
+                shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
-            minimum_distance = min(circle_distances.keys())
-            closest_point = circle_distances[minimum_distance]
+                return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
-            shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+            if len(distances) > 1:
 
-            return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+                distances.sort()
+                p1, wall1 = circle_distances[distances[0]]
+                p2, wall2 = circle_distances[distances[1]]
+
+                points = [p1, p2]
+                x, y = [], []
+
+                for point in points:
+                    shortest_line_inclination = self.get_shortest_line_inclination(point)
+                    est_x, est_y = self.get_corrected_xy(point, shortest_line_inclination, induce_sliding=False)
+                    x.append(est_x)
+                    y.append(est_y)
+
+                # closest_point = SPoint(int((p1.x + p2.x)/2), int((p1.y + p2.y)/2))
+                # print(closest_point)
+                # # closest_point = wall1.intersection(wall2)
+                # shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+                # excess_distance = -robot_radius + distances[0]
+
+                return (np.mean(x), np.mean(y)), True
 
         # The only remaining case is line intersections
         minimum_distance = min(line_distances.keys())
-        closest_point = line_distances[minimum_distance]
+        closest_point, wall = line_distances[minimum_distance]
 
         shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
 
         return self.get_corrected_xy(closest_point, shortest_line_inclination), True
 
-    def get_corrected_xy(self, intersection_point, shortest_line_inclination):
+    def get_corrected_xy(self, intersection_point, shortest_line_inclination, induce_sliding=True):
         """
         Gets the corrected centre position of the robot
 
@@ -502,18 +529,21 @@ class Robot:
         # This will be the new centre, but we need to induce some sliding
         new_x, new_y = x + x_offset, y + y_offset
 
-        # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
-        increase_x = 1 if np.abs(y - new_y) > 0 else 0
-        increase_y = 1 if np.abs(x - new_x) > 0 else 0
+        if induce_sliding:
+            # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
+            increase_x = 1 if np.abs(y - new_y) > 0 else 0
+            increase_y = 1 if np.abs(x - new_x) > 0 else 0
 
-        # This is by how much the new centre will slide
-        x_component = 2 * np.cos(np.radians(self.theta)) * increase_x
-        y_component = 2 * np.sin(np.radians(self.theta)) * increase_y
+            # This is by how much the new centre will slide
+            x_component = 2 * np.cos(np.radians(self.theta)) * increase_x
+            y_component = 2 * np.sin(np.radians(self.theta)) * increase_y
 
-        x_final = new_x + x_component
-        y_final = new_y + y_component
+            x_final = new_x + x_component
+            y_final = new_y + y_component
 
-        return x_final, y_final
+            return x_final, y_final
+
+        return new_x, new_y
 
     def get_shortest_line_inclination(self, intersection_point):
         """
