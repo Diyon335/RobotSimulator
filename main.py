@@ -13,6 +13,8 @@ from robot_simulator import gui
 from robot_simulator.gui import walls
 from robot_simulator.robot import Robot
 
+from evolutionary_algorithm.encoding import real_number_encoding
+
 
 # Where to place the robot at the start
 robot_start = (450, 400)
