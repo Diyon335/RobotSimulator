@@ -9,9 +9,9 @@ Olmo Denegri (i6333396)
 Florent Didascalou (i6337071)
 """
 
-import gui
-from gui import walls
-from robot import Robot
+from robot_simulator import gui
+from robot_simulator.gui import walls
+from robot_simulator.robot import Robot
 
 
 # Where to place the robot at the start
