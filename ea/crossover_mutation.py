@@ -5,23 +5,22 @@ import random
 
 
 def choose_parents(genotype_dictionary):
-
-    '''
+    """
     :param genotype_dictionary: The dictionary containing all genotypes
     :return: The two parents keys to recombine
-    '''
+    """
 
     key_list = random.sample(range(len(genotype_dictionary)), 2)
 
     return key_list
 
-def one_point_crossover(genotype_dictionary, key_list):
 
-    '''
+def one_point_crossover(genotype_dictionary, key_list):
+    """
     :param genotype_dictionary: The dictionary containing all genotypes
     :param key_list: A list containing the keys of the parents
     :return: The whole dictionary with mutated genotypes
-    '''
+    """
 
     point = random.randint(1, len(genotype_dictionary) - 1)
 
@@ -31,29 +30,22 @@ def one_point_crossover(genotype_dictionary, key_list):
         else:
             genotype_dictionary[key_list[1]][0][i] = genotype_dictionary[key_list[0]][0][i]
 
-
-
+    # TODO Don't return the dictionary, just modify it. Don't return anything
     return genotype_dictionary
 
+
 def uniform_crossover(genotype_dictionary, key_list):
-
-    '''
-
+    """
     :param genotype_dictionary: The dictionary containing all genotypes
     :param key_list: A list containing the keys of the parents
     :return: The whole dictionary with mutated genotypes
-    '''
-
-    return genotype_dictionary
+    """
+    pass
 
 
 def arithmetic_crossover(genotype_dictionary, key_list):
-
-    '''
-
+    """
     :param genotype_dictionary: The dictionary containing all genotypes
     :param key_list: A list containing the keys of the parents
-    :return: The whole dictionary with mutated genotypes
-    '''
-
-    return genotype_dictionary
+    """
+    pass

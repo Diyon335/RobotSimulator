@@ -1,19 +1,20 @@
 """
 This file contains all evaluation strategies
 """
+import numpy as np
 
-def evaluate(genotype_dictionary):
 
-    '''
-    :param genotype_dictionary: The genotype dictionary
-    :return: The genotype dictionary with the evaluation calculation
+def get_xy_phenotype(genotype):
+    """
+    :param genotype: A list indicating the genotype
+    :return: Returns the phenotype of the genotype
 
     We need to define how to go from the genotype to a pair of coordinates for the two functions
-    In this function the evaluation of each element (initially set to 0) will be modified
-    '''
+    """
+    x, y = None, None
 
+    return x, y
 
-    return genotype_dictionary
 
 def cost_rosenbrock(x, y):
     """
@@ -27,7 +28,6 @@ def cost_rosenbrock(x, y):
     a = 0
     b = 100
     return (a - x) ** 2 + (b * (y - x ** 2) ** 2)
-
 
 
 def cost_rastrigin(x, y, n=2):
