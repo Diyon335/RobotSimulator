@@ -1,7 +1,6 @@
 """
 Autonomous Robotic Systems (2223-KEN4114)
 Assignment 2: Robot Simulator
-
 @authors:
 Diyon Wickrameratne (i6176139)
 Luca Forte (I6330944)

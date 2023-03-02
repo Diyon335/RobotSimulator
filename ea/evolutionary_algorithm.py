@@ -3,6 +3,9 @@ This file initialises, allows the modification of parameters and runs the evolut
 """
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
+from ea.crossover_mutation import choose_parents, one_point_crossover
+from ea.selection import tournament_selection
+from ea.reproduction import reproduction_tournament_selection
 
 genotypes = {}
 
@@ -29,13 +32,15 @@ tournament_k = 5
 def initialise():
     """
     This function populates the genotype dictionary by using the specified encoding strategy.
-    Each genotype has a key (integer), and a fitness which is initially 0
+    Each genotype has a key (integer), and a fitness which is initially 1
 
     :return: None
     """
 
     for i in range(5):
         genotypes[i] = real_number_encoding(genotype_length, genotype_min_range, genotype_max_range, whole_numbers), 0
+
+    print(genotypes)
 
 
 def run_algorithm():
@@ -47,6 +52,12 @@ def run_algorithm():
     """
 
     initialise()
+
+    print(genotypes)
+
+    tournament_selection(genotypes, 3)
+
+    print(genotypes)
 
     for i in range(generations):
         pass
