@@ -10,6 +10,21 @@ number_of_genotypes = 5
 
 generations = 100
 
+# Variables for the encoding strategy
+genotype_length = 5
+genotype_min_range = -2
+genotype_max_range = 2
+whole_numbers = True
+
+# Variables for the evaluation strategy
+
+# Variables for the selection strategy
+tournament_k = 5
+
+# Variables for the reproduction strategy
+
+# Variables for the crossover/mutation strategies
+
 
 def initialise():
     """
@@ -20,9 +35,7 @@ def initialise():
     """
 
     for i in range(5):
-        genotypes[i] = real_number_encoding(5, -2, 2, integers=True), 0
-
-    print(genotypes)
+        genotypes[i] = real_number_encoding(genotype_length, genotype_min_range, genotype_max_range, whole_numbers), 0
 
 
 def run_algorithm():
