@@ -1,7 +1,19 @@
+"""
+Autonomous Robotic Systems (2223-KEN4114)
+Assignment 2: Robot Simulator
+
+@authors:
+Diyon Wickrameratne (i6176139)
+Luca Forte (I6330944)
+Olmo Denegri (i6333396)
+Florent Didascalou (i6337071)
+"""
+
+
 import math
 
 import pygame
-from sympy import Point, Line, Segment
+from shapely.geometry import LineString
 
 is_running = True
 window_size = (900, 800)
@@ -12,10 +24,29 @@ robot_radius = 52
 robot_border_size = 2
 
 walls = [
-    Segment(Point(110, 90), Point(810, 90)),
-    Segment(Point(110, 90), Point(110, 710)),
-    Segment(Point(110, 710), Point(810, 710)),
-    Segment(Point(810, 710), Point(810, 90))
+    # Standard walls
+    LineString([(110, 90), (810, 90)]),
+    LineString([(110, 90), (110, 710)]),
+    LineString([(110, 710), (810, 710)]),
+    LineString([(810, 710), (810, 90)])
+
+    # Upward slope
+    # LineString([(400, 300), (810, 90)])
+
+    # Downward slope
+    # LineString([(400, 300),(0, 0)])
+
+    # Outward corner
+    # LineString([(450, 600), (200, 710)]),
+    # LineString([(450, 600), (600, 710)])
+
+    # Outward corner
+    # LineString([(450, 600), (200, 600)]),
+    # LineString([(450, 600), (450, 800)])
+
+    # Narrow corner
+    # LineString([(450, 600), (150, 90)]),
+    # LineString([(450, 600), (600, 90)])
 ]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
@@ -25,7 +56,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 10
+velocity_change = 1
 
 
 def run(robot):
@@ -45,6 +76,8 @@ def run(robot):
     # Create background
     background = pygame.Surface(window_size)
     background.fill(pygame.Color('#FFFFFF'))
+
+    clock = pygame.time.Clock()
 
     global is_running
     while is_running:
@@ -104,7 +137,7 @@ def run(robot):
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
         for wall in walls:
-            pygame.draw.line(window_surface, "#000000", wall.p1, wall.p2, width=2)
+            pygame.draw.line(window_surface, "#000000", wall.coords[0], wall.coords[1], width=2)
 
         # Draw velocity rectangles
         font = pygame.font.Font(None, 20)
@@ -128,7 +161,7 @@ def run(robot):
         window_surface.blit(v_r_text, v_r_rectangle)
 
         # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
-        sensors = [(sensor.angle, sensor.sense_distance(), sensor.p1, sensor.p2) for sensor in robot.sensors]
+        sensors = [(sensor.angle, sensor.sense_distance2(), sensor.p1, sensor.p2) for sensor in robot.sensors]
 
         for sensor in sensors:
 
@@ -145,4 +178,5 @@ def run(robot):
 
             window_surface.blit(sensor_distance, sensor_rectangle)
 
+        clock.tick(60)
         pygame.display.update()

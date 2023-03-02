@@ -1,8 +1,22 @@
-import math
+"""
+Autonomous Robotic Systems (2223-KEN4114)
+Assignment 2: Robot Simulator
 
-from sympy import Point, Line, Segment, Ellipse
+@authors:
+Diyon Wickrameratne (i6176139)
+Luca Forte (I6330944)
+Olmo Denegri (i6333396)
+Florent Didascalou (i6337071)
+"""
+
+from sympy import Point, Segment, Ellipse
 from gui import robot_radius, robot_border_size
 import numpy as np
+from shapely.geometry import LineString
+from shapely.geometry import Point as SPoint
+from shapely.geometry import MultiPoint
+
+horizontal_vector = [1, 0]
 
 
 class Robot:
@@ -81,6 +95,56 @@ class Robot:
             # Return the sensor's max range if there are no intersections, else return the min distance
             return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
 
+        def sense_distance2(self):
+            """
+            Computes the distance from the edge of the robot to the nearest wall
+            """
+
+            # The starting point is the robot's centre
+            starting_point = SPoint(self.robot.pos)
+
+            # Ending point is the sensor's max distance away from from its starting point, in the direction of the
+            # sensor's angle plus the robot's radius
+            ending_x = starting_point.x \
+                + self.sensor_range * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.cos(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.cos(np.radians(self.robot.theta - self.angle - 90))
+
+            ending_y = starting_point.y \
+                + self.sensor_range * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_radius * np.sin(np.radians(self.robot.theta - self.angle - 90)) \
+                + robot_border_size * np.sin(np.radians(self.robot.theta - self.angle - 90))
+
+            ending_point = SPoint((ending_x, ending_y))
+
+            # To help plotting the sensor line on the GUI if needed
+            self.p1 = starting_point
+            self.p2 = ending_point
+
+            # Changed Line -> Segment. Line results in errors when joining two points like this
+            sensor_detection_line = LineString([starting_point, ending_point])
+
+            distances_list = []
+
+            for line in self.robot.room_map:
+
+                # Returns a list with possible intersections
+                intersection_points = sensor_detection_line.intersection(line)
+
+                # If no intersections, continue
+                if intersection_points.is_empty:
+                    continue
+
+                if type(intersection_points) == SPoint:
+                    distances_list.append(starting_point.distance(intersection_points))
+
+                if type(intersection_points) == MultiPoint:
+                    for i in range(len(intersection_points.geoms)):
+                        distances_list.append(starting_point.distance(intersection_points.geoms[i]))
+
+            # Return the sensor's max range if there are no intersections, else return the min distance
+            return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
+
     def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
         self.pos = pos
@@ -122,6 +186,7 @@ class Robot:
         # wheel velocities and environment
 
         # Remember that in the edge case: we have to recursively update position
+        old_pos = self.pos
 
         # Get new prospective position
         new_pos_orient = self.get_new_pos()
@@ -131,13 +196,14 @@ class Robot:
         # Recursive check for legal position
         legal = False
         while not legal:
-            new_pos, legal = self.correct_pos(new_pos)
+
+            # new_pos, legal = self.correct_pos(new_pos)
+            new_pos, legal = self.correct_pos2(old_pos, new_pos)
+            # new_pos, legal = self.correct_pos_shapely(new_pos)
 
         # Set new position and orientation
         self.pos = new_pos
         self.theta = new_theta
-
-        # Set new position
 
     def get_new_pos(self):
         # 1: Calculate omega and R
@@ -206,13 +272,8 @@ class Robot:
             for i in range(1, len(closest_lines)):
                 if closest_lines[i].distance(old_center) < closest_line.distance(old_center):
                     closest_line = closest_lines[i]
-                
-        
-        
-        
-        #closest_line = min(distances_dict, key=distances_dict.get)
 
-
+        # closest_line = min(distances_dict, key=distances_dict.get)
 
         # If the line is vertical (x1 = x2) shift the robots new x coordinate so that it lies one
         # radius away from the line (in the direction of the robot)
@@ -236,3 +297,268 @@ class Robot:
                 new_y = p1[1] + (robot_radius + 1)
 
         return (new_x, new_y), False
+    
+    def correct_pos_shapely(self, new_pos):
+        old_center = SPoint(self.pos)
+        new_center = SPoint(new_pos)
+        robot_circle = new_center.buffer(robot_radius).boundary
+
+        travel_path = LineString([self.pos, new_pos])
+        
+        distances_dict = {}
+        for wall in self.room_map:
+            circle_intersections = robot_circle.intersection(wall)
+            line_intersections = travel_path.intersection(wall)
+            if circle_intersections.is_empty and line_intersections.is_empty:
+                continue
+            
+            distances = []
+            if type(circle_intersections) is MultiPoint:
+                
+                for p in circle_intersections.geoms:
+                    distances.append(old_center.distance(p))
+            elif type(circle_intersections) is SPoint:
+                distances.append(old_center.distance(circle_intersections))
+            
+            if type(line_intersections) is SPoint:
+                distances.append(old_center.distance(line_intersections))
+            elif type(line_intersections) is MultiPoint:
+                distances.append(old_center.distance(wall))
+            distances_dict[wall] = min(distances)
+        
+        if not distances_dict:
+            return new_pos, True
+
+        # Check which intersection with the map occurs closest to the robot's current position
+        min_distance = min(distances_dict.values())
+        closest_lines = [key for key in distances_dict if distances_dict[key] == min_distance]
+
+        # Further check in the case of intersecting at a corner to prevent illegal moves
+        closest_line = closest_lines[0]
+        if len(closest_lines) > 1:
+            for i in range(1, len(closest_lines)):
+                if closest_lines[i].distance(old_center) < closest_line.distance(old_center):
+                    closest_line = closest_lines[i]
+
+        p1 = (list(closest_line.coords)[0][0],  list(closest_line.coords)[0][1])
+        p2 = (list(closest_line.coords)[1][0],  list(closest_line.coords)[1][1])
+
+        new_x = new_pos[0]
+        new_y = new_pos[1]
+        if p1[0] == p2[0]:
+            if self.pos[0] < p1[0]:
+                new_x = p1[0] - (robot_radius + 1)
+            else:
+                new_x = p1[0] + (robot_radius + 1)
+        elif p1[1] == p2[1]:
+            if self.pos[1] < p1[1]:
+                new_y = p1[1] - (robot_radius + 1)
+            else:
+                new_y = p1[1] + (robot_radius + 1)
+
+        return (new_x, new_y), False
+
+    def correct_pos2(self, old_pos, new_pos):
+        """
+        Corrects the new centre of the robot the following way:
+
+        First we check for circle intersections. If there's an intersection with one wall, there will be two points
+        of contact. The mid point, m, of these two points of contact is the point that is the shortest distance away
+        from the centre of the robot. Let the line that joins the centre of the robot and m, be called l. Let angle
+        of inclination of l wrt to the positive x-axis be called alpha. The amount that the robot must slide in the
+        direction is moves is a constant component/fraction of its radius. In this case, the constant is set to 2.
+
+        Therefore the final corrected position of the robot will be:
+
+        new_pos = new_pos + pos_offset + sliding_component
+
+        Where the offsets are given by:
+
+        x_offset = -R * np.cos(alpha)
+        y_offset = -R * np.sin(alpha)
+
+        And the sliding components are:
+
+        x_slide = 2 * np.cos(theta)
+        y_slide = 2 * np.sin(theta)
+
+        If the circle intersects two walls (a corner where the robot is trapped within), it will take the average
+        of the two suggested positions
+
+        In the case that the robot fully crosses a wall, a line is drawn between the centres of the two positions of the
+        robot. The above equations apply the same way where m is the point of intersection where l2 meets the closest
+        wall
+
+        :param old_pos: Tuple indicating old position
+        :param new_pos: Tuple indicating new position
+        :return: Tuple with corrected position
+        """
+
+        old_centre = SPoint(old_pos)
+        new_centre = SPoint(new_pos)
+        robot_circle = new_centre.buffer(robot_radius).boundary
+
+        travelled_path = LineString([old_pos, new_pos])
+
+        circle_distances = {}
+        line_distances = {}
+
+        for wall in self.room_map:
+            circle_intersection_points = robot_circle.intersection(wall)
+            line_intersection_points = travelled_path.intersection(wall)
+
+            # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
+            if circle_intersection_points.is_empty and line_intersection_points.is_empty:
+                continue
+
+            # Does the circle intersect at two points on the same wall? --> midpoint
+            if type(circle_intersection_points) is MultiPoint:
+
+                if len(circle_intersection_points.geoms) == 2:
+
+                    p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
+                    p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
+
+                    mid_x = (p1.x + p2.x)/2
+                    mid_y = (p1.y + p2.y)/2
+
+                    mid_point = SPoint((mid_x, mid_y))
+                    distance_to_point = new_centre.distance(mid_point)
+                    circle_distances[distance_to_point] = mid_point, wall
+
+                    # This info is enough to correct the position
+                    continue
+
+            # Does the circle intersect just one point on the wall? Add it as a single point
+            if type(circle_intersection_points) == SPoint:
+
+                distance_to_point = new_centre.distance(circle_intersection_points)
+                circle_distances[distance_to_point] = circle_intersection_points, wall
+
+                # This info is enough to correct the position
+                continue
+
+            # If no circle intersections, there could be line intersections
+            if line_intersection_points.is_empty:
+                continue
+
+            # If a single point
+            if type(line_intersection_points) == SPoint:
+                distance_to_point = old_centre.distance(line_intersection_points)
+                line_distances[distance_to_point] = line_intersection_points, wall
+
+            # If multiple points - very rare case
+            if type(line_intersection_points) == MultiPoint:
+
+                for i in range(len(line_intersection_points.geoms)):
+
+                    distance_to_point = old_centre.distance(line_intersection_points.geoms[i])
+                    line_distances[distance_to_point] = line_intersection_points.geoms[i], wall
+
+        # If no intersections with all walls, just return new pos
+        if len(circle_distances) < 1 and len(line_distances) < 1:
+            return new_pos, True
+
+        # First check circle possible circle intersections
+        if len(circle_distances) > 0:
+
+            distances = list(circle_distances.keys())
+
+            if len(distances) == 1:
+
+                minimum_distance = min(circle_distances.keys())
+                closest_point, wall = circle_distances[minimum_distance]
+
+                shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+
+                return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+
+            # If it collides with two or more walls, we want the two closest walls
+            if len(distances) > 1:
+
+                distances.sort()
+                p1, wall1 = circle_distances[distances[0]]
+                p2, wall2 = circle_distances[distances[1]]
+
+                points = [p1, p2]
+                x, y = [], []
+
+                # The new position will be the average of both walls' corrections
+                for point in points:
+                    shortest_line_inclination = self.get_shortest_line_inclination(point)
+                    est_x, est_y = self.get_corrected_xy(point, shortest_line_inclination, induce_sliding=False)
+                    x.append(est_x)
+                    y.append(est_y)
+
+                return (np.mean(x), np.mean(y)), True
+
+        # The only remaining case is line intersections
+        minimum_distance = min(line_distances.keys())
+        closest_point, wall = line_distances[minimum_distance]
+
+        shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+
+        return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+
+    def get_corrected_xy(self, intersection_point, shortest_line_inclination, induce_sliding=True):
+        """
+        Gets the corrected centre position of the robot
+
+        :param induce_sliding: A boolean indicating whether the robot should slide
+        :param intersection_point: SPoint object indicating the closest intersection point
+        :param shortest_line_inclination: The inclination of the line connecting the robot's centre to the
+        intersection point
+        :return: A tuple of integers indicating the robot's new centre (x, y)
+        """
+
+        x, y = intersection_point.x, intersection_point.y
+
+        # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
+        # intersection point
+        x_offset = -(robot_radius + robot_border_size) * np.cos(shortest_line_inclination)
+        y_offset = -(robot_radius + robot_border_size) * np.sin(shortest_line_inclination)
+
+        # This will be the new centre, but we need to induce some sliding
+        new_x, new_y = x + x_offset, y + y_offset
+
+        if induce_sliding:
+            # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
+            increase_x = 1 if np.abs(y - new_y) > 0 else 0
+            increase_y = 1 if np.abs(x - new_x) > 0 else 0
+
+            # This is by how much the new centre will slide
+            x_component = 2 * np.cos(np.radians(self.theta)) * increase_x
+            y_component = 2 * np.sin(np.radians(self.theta)) * increase_y
+
+            x_final = new_x + x_component
+            y_final = new_y + y_component
+
+            return x_final, y_final
+
+        return new_x, new_y
+
+    def get_shortest_line_inclination(self, intersection_point):
+        """
+        The shortest line is the one that connects the centre of the robot and an intersection point. This function
+        returns its inclination with respect to the positive x-axis in the clockwise direction
+
+        :param intersection_point: SPoint object for the intersection point
+        :return: An angle in RADIANS
+        """
+
+        # Create a vector going from the centre to the nearest intersection point
+        x1, y1 = self.pos
+        x2, y2 = intersection_point.x, intersection_point.y
+        direction_vector = [x2 - x1, y2 - y1]
+
+        # This is an indication whether this vector points up or down. Since theta is measured clockwise, a vector
+        # pointing up should return a positive angle. A vector pointing down means a negative angle
+        shortest_line_points_up = y2 - y1 > 0
+
+        # Normalise the vectors and compute the dot product
+        unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
+        unit_vector_2 = direction_vector / np.linalg.norm(direction_vector)
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+
+        angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
+        return angle
