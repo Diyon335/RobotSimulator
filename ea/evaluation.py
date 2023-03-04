@@ -7,11 +7,15 @@ import numpy as np
 def get_xy_phenotype(genotype):
     """
     :param genotype: A list indicating the genotype
-    :return: Returns the phenotype of the genotype
+    :return: Returns the phenotype of the genotype, where the x is defined as the average
+            of the first half of the real-valued genotype and the y is defined as the average of
+            the second half of the real-valued genotype array
 
-    We need to define how to go from the genotype to a pair of coordinates for the two functions
     """
-    x, y = None, None
+    first_half = int(len(genotype/2))
+    second_half = len(genotype) - first_half
+    x = sum(genotype[:first_half])/first_half
+    y = sum(genotype[second_half:])/second_half
 
     return x, y
 
