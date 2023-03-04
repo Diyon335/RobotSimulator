@@ -12,7 +12,7 @@ def get_xy_phenotype(genotype):
             the second half of the real-valued genotype array
 
     """
-    first_half = int(len(genotype/2))
+    first_half = int(len(genotype)/2)
     second_half = len(genotype) - first_half
     x = sum(genotype[:first_half])/first_half
     y = sum(genotype[second_half:])/second_half
