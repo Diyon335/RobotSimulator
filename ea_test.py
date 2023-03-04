@@ -37,55 +37,41 @@ def run_algorithm():
     ## initialization
     genotypes = [(random.uniform(-5, 5), random.uniform(-5, 5)) for i in range(pop_size)]
 
-    population_info = {}
+    fitness_dict = {}
 
     for i in range(100):
         ## evaluation
         for gene in genotypes:
-            population_info[gene] = cost_rosenbrock(gene[0], gene[1])
-        #best_genotype = min(population_info, key=population_info.get)
-
+            fitness_dict[gene] = cost_rosenbrock(gene[0], gene[1])
+        #best_genotype = min(fitness_dict, key=fitness_dict.get)
 
         ## selection: tournament
         offspring = []
         k = 5
         for i in range(50):
-            genotypes = list(population_info.keys())
+            genotypes = list(fitness_dict.keys())
             to_sample = random.sample(genotypes, k)
-            sampled = [(genotype, population_info[genotype]) for genotype in to_sample]
+            sampled = [(genotype, fitness_dict[genotype]) for genotype in to_sample]
             best = min(sampled, key=lambda x: x[1])
             offspring.append(((best[0][0], best[0][1]), best[1]))
-        #print(fitness_lst)
-        #print("offspring count " + str(len(offspring)))
 
         ## reproduction
         # TODO Never use dictionaries
-        #print(max(population_info.values()))
-        population_info.clear()
+        fitness_dict.clear()
         counter = 0
         for off in offspring:
             counter += 1
-            population_info[off[0]] = off[1]
-        
-        #print("length of pop")
-        #print(len(list(population_info.keys())))
-        #print("NEW!")
-        #print(population_info)
-        #print(max(population_info.values()))
+            fitness_dict[off[0]] = off[1]
 
         ## clean up offspring
         clean_offspring = [off[0] for off in offspring]
 
         ## Crossover - arithmetic
-        children = []
-        
-        
+        children = []  
         for off in clean_offspring:
             coparrent = random.choice(clean_offspring)
             child = ((off[0] + coparrent[0]) / 2, (off[1] + coparrent[1]) / 2)
             children.append(child)
-        #print(len(children))
-        #print(children)
 
         ## Mutation
         mutation_chance = 0.1
@@ -94,7 +80,7 @@ def run_algorithm():
         for child in children:
             mutated_children.append(apply_mutation(child, mutation_chance, mutation_size))
         genotypes = mutated_children
-        population_info.clear()
+        fitness_dict.clear()
 
     final_population = []
     for gene in genotypes:
@@ -102,12 +88,6 @@ def run_algorithm():
     
     print(final_population)
     print(min(final_population, key=lambda x: x[1]))
-
-
-            
-
-
-    print()
 
 if __name__ == '__main__':
 
