@@ -9,7 +9,7 @@ from matplotlib import animation
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
 from ea.crossover_mutation import choose_parents, one_point_crossover
-from ea.reproduction import generational_replacement
+from ea.reproduction import generational_replacement, generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 
 genotype_history = []
@@ -19,12 +19,12 @@ number_of_genotypes = 100
 
 generations = 100
 
-offspring_per_generation = 10
+offspring_per_generation = 5
 
 # Variables for the encoding strategy
 genotype_length = 5
-genotype_min_range = -5
-genotype_max_range = 5
+genotype_min_range = -10
+genotype_max_range = 10
 whole_numbers = True
 
 # Variables for the evaluation strategy
@@ -48,7 +48,8 @@ encoding_strategy = real_number_encoding
 phenotype_computer = get_xy_phenotype
 cost_function = cost_rosenbrock
 selection_strategy = tournament_selection
-reproduction_strategy = generational_replacement
+reproduction_strategy = generational_rollover
+mutation_strategy = one_point_crossover
 
 
 def initialise():
@@ -67,8 +68,8 @@ def initialise():
 
     for i in range(number_of_genotypes):
 
-        genotype = real_number_encoding(genotype_length, genotype_min_range, genotype_max_range, integers=whole_numbers)
-        x, y = get_xy_phenotype(genotype)
+        genotype = encoding_strategy(genotype_length, genotype_min_range, genotype_max_range, integers=whole_numbers)
+        x, y = phenotype_computer(genotype)
 
         genotypes[i] = [genotype, 0, (x, y)]
 
@@ -84,6 +85,7 @@ def run_algorithm():
     initialise()
 
     for i in range(generations):
+
         # EVALUATION
         # For each genotype, compute the fitness
         for genotype_id in genotypes:
@@ -92,13 +94,13 @@ def run_algorithm():
             if i > 0:
                 # Replace old phenotype
                 genotype = genotypes[genotype_id][0]
-                genotypes[genotype_id][2] = get_xy_phenotype(genotype)
+                genotypes[genotype_id][2] = phenotype_computer(genotype)
 
             # Get phenotype
             x, y = genotypes[genotype_id][2]
 
             # Replace current fitness
-            genotypes[genotype_id][1] = cost_rastrigin(x, y)
+            genotypes[genotype_id][1] = -cost_function(x, y)
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -107,13 +109,14 @@ def run_algorithm():
 
         for j in range(offspring_per_generation):
 
-            best_parent = tournament_selection(genotypes, k=tournament_k)
+            best_parent = selection_strategy(genotypes, k=tournament_k)
             offspring.append(best_parent)
 
         # REPRODUCTION
-        generational_replacement(genotypes, offspring)
+        reproduction_strategy(genotypes, offspring)
 
         # MUTATION / CROSS OVER
+        mutation_strategy(genotypes, offspring)
 
         genotype_history.append(genotypes)
 
