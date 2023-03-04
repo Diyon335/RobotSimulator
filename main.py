@@ -7,12 +7,13 @@ Luca Forte (I6330944)
 Olmo Denegri (i6333396)
 Florent Didascalou (i6337071)
 """
+import matplotlib.pyplot as plt
 
 from robot_simulator import gui
 from robot_simulator.gui import walls
 from robot_simulator.robot import Robot
 
-from ea.evolutionary_algorithm import run_algorithm
+from ea.evolutionary_algorithm import run_algorithm, animate_evolution, plot_generations
 
 
 # Where to place the robot at the start
@@ -26,3 +27,4 @@ if __name__ == '__main__':
 
     run_algorithm()
 
+    animate_evolution()

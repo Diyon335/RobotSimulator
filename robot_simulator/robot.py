@@ -379,8 +379,8 @@ class Robot:
 
         And the sliding components are:
 
-        x_slide = 2 * np.cos(theta)
-        y_slide = 2 * np.sin(theta)
+        x_slide = average_velocity * np.cos(theta)
+        y_slide = average_velocity * np.sin(theta)
 
         If the circle intersects two walls (a corner where the robot is trapped within), it will take the average
         of the two suggested positions
@@ -409,13 +409,14 @@ class Robot:
 
             # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
             if circle_intersection_points.is_empty and line_intersection_points.is_empty:
+                print(f"NO intersections")
                 continue
 
             # Does the circle intersect at two points on the same wall? --> midpoint
             if type(circle_intersection_points) is MultiPoint:
 
                 if len(circle_intersection_points.geoms) == 2:
-
+                    print(f"Two intersections, so finding midpoint")
                     p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
                     p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
 
@@ -431,7 +432,7 @@ class Robot:
 
             # Does the circle intersect just one point on the wall? Add it as a single point
             if type(circle_intersection_points) == SPoint:
-
+                print(f"One intersection with circle")
                 distance_to_point = new_centre.distance(circle_intersection_points)
                 circle_distances[distance_to_point] = circle_intersection_points, wall
 
@@ -444,6 +445,7 @@ class Robot:
 
             # If a single point
             if type(line_intersection_points) == SPoint:
+                print(f"One line intersection")
                 distance_to_point = old_centre.distance(line_intersection_points)
                 line_distances[distance_to_point] = line_intersection_points, wall
 
@@ -465,7 +467,7 @@ class Robot:
             distances = list(circle_distances.keys())
 
             if len(distances) == 1:
-
+                print(f"Just a wall")
                 minimum_distance = min(circle_distances.keys())
                 closest_point, wall = circle_distances[minimum_distance]
 
@@ -475,7 +477,7 @@ class Robot:
 
             # If it collides with two or more walls, we want the two closest walls
             if len(distances) > 1:
-
+                print(f"Corner")
                 distances.sort()
                 p1, wall1 = circle_distances[distances[0]]
                 p2, wall2 = circle_distances[distances[1]]
@@ -527,8 +529,9 @@ class Robot:
             increase_y = 1 if np.abs(x - new_x) > 0 else 0
 
             # This is by how much the new centre will slide
-            x_component = 2 * np.cos(np.radians(self.theta)) * increase_x
-            y_component = 2 * np.sin(np.radians(self.theta)) * increase_y
+            average_velocity = (self.v_l + self.v_r)/2
+            x_component = average_velocity * np.cos(np.radians(self.theta)) * increase_x
+            y_component = average_velocity * np.sin(np.radians(self.theta)) * increase_y
 
             x_final = new_x + x_component
             y_final = new_y + y_component

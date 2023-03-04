@@ -2,6 +2,7 @@
 This file contains all evaluation strategies
 """
 import numpy as np
+import random
 
 
 def get_xy_phenotype(genotype):
@@ -11,7 +12,7 @@ def get_xy_phenotype(genotype):
 
     We need to define how to go from the genotype to a pair of coordinates for the two functions
     """
-    x, y = None, None
+    x, y = np.mean(genotype), np.mean(genotype)
 
     return x, y
 
