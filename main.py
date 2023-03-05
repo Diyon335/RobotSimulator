@@ -13,7 +13,7 @@ from robot_simulator import gui
 from robot_simulator.gui import walls
 from robot_simulator.robot import Robot
 
-from ea.evolutionary_algorithm import run_algorithm, animate_evolution, plot_generations
+from ea.evolutionary_algorithm import run_algorithm, animate_evolution
 
 
 # Where to place the robot at the start
@@ -22,9 +22,8 @@ robot_start = (450, 400)
 
 if __name__ == '__main__':
 
-    #robot = Robot(1, robot_start, walls, n_sensors=12)
-    #gui.run(robot)
+    # robot = Robot(1, robot_start, walls, n_sensors=12)
+    # gui.run(robot)
 
     run_algorithm()
-
     animate_evolution()
