@@ -56,7 +56,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 1
+velocity_change = 2
 
 
 def run(robot):
