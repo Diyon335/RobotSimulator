@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import copy
 import random
 from celluloid import Camera
+from collections import Counter
 
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
@@ -79,14 +80,16 @@ def initialise():
     genotype_history.append(generation)
 
 
-def run_algorithm():
+def run_algorithm(placeholder):
     """
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
-
-    :return: None
+    :param placeholder: Some value passed into the algorithm for the purpose of testing
+    :return: Some information about the current run of the algorithm
     """
 
+    ## Change which variable to set to the passed parameter to explore different options
+    mutation_rate = placeholder
     initialise()
 
     for i in range(generations):
@@ -110,6 +113,18 @@ def run_algorithm():
             population_dictionary[individual][1] = -cost_function(x, y)
 
         genotype_history.append(generation)
+
+        ## Stoping condition:
+        ##      return early when >50% of individuals have the same genotype
+        pop_list = list(population_dictionary.values())
+        genotype_list = [item[0] for item in pop_list]
+        
+        counter = Counter(map(tuple, genotype_list))
+        print(counter.most_common(1))
+        if counter.most_common(1)[0][1] > population_size * 0.6:
+            return max(pop_list, key=lambda x: x[1])[1], i
+        
+
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -148,10 +163,14 @@ def run_algorithm():
             offspring_dictionary[offspring][1] = -cost_function(x, y)
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
-        # print(population_dictionary)
-        features = list(population_dictionary.values())
-        features.sort(key=lambda feature: feature[1])
-        print([(ind[1], ind[2]) for ind in features])
+        # # print(population_dictionary)
+        # features = list(population_dictionary.values())
+        # features.sort(key=lambda feature: feature[1])
+        # print([(ind[1], ind[2]) for ind in features])
+    
+    pop_list = list(population_dictionary.values())
+    
+    return max(pop_list, key=lambda x: x[1])[1], generations
 
 
 def animate_evolution():

@@ -25,5 +25,9 @@ if __name__ == '__main__':
     # robot = Robot(1, robot_start, walls, n_sensors=12)
     # gui.run(robot)
 
-    run_algorithm()
-    animate_evolution()
+    best, itter = run_algorithm(8)
+
+    print("best fitness: " + str(best))
+    print("Itterations untill convergence: " + str(itter))
+    print("DONE!!!")
+    #animate_evolution()
