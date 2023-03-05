@@ -109,10 +109,6 @@ def run_algorithm():
 
         genotype_history.append(generation)
 
-        print()
-        print("Generation "+str(i))
-        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
-
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
         # Holds the IDs of the parents that will be copied
@@ -125,21 +121,15 @@ def run_algorithm():
 
         # REPRODUCTION
         reproduction_strategy(genotypes, offspring)
-        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
-        print(genotypes)
 
         # MUTATION / CROSS OVER
         key_list = choose_parents(genotypes)
-        print(key_list)
         mutation_strategy(genotypes, key_list)
         for id in key_list:
             genotype = genotypes[id][0]
             genotypes[id][2] = phenotype_computer(genotype)
             x, y = genotypes[id][2]
             genotypes[id][1] = -cost_function(x, y)
-
-        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
-        print()
 
 
 def animate_evolution():

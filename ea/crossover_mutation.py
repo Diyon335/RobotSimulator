@@ -85,6 +85,7 @@ def arithmetic_crossover(genotype_dictionary, key_list, integers=True):
 
     return
 
+
 def mutation(genotype_dictionary, target_offspring, mutation_range = 1, mutation_rate = 2):
     """
     :param genotype_dictionary: The dictionary containing all genotypes
