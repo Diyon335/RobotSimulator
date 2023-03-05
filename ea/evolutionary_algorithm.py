@@ -151,7 +151,7 @@ def run_algorithm():
         # print(population_dictionary)
         features = list(population_dictionary.values())
         features.sort(key=lambda feature: feature[1])
-        print([ind[1] for ind in features])
+        print([(ind[1], ind[2]) for ind in features])
 
 
 def animate_evolution():

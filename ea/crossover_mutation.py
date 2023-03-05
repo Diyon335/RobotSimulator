@@ -63,6 +63,7 @@ def arithmetic_crossover(offspring_dictionary, key_list, integers=True):
     """
     :param offspring_dictionary: The dictionary containing genotypes of offsprings
     :param key_list: A list containing the keys of the offspring to recombine
+    :param integers: A boolean determining whether genes should be integers after arithmetic computation
     :return: none
     """
 
