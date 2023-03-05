@@ -120,7 +120,7 @@ def run_algorithm(placeholder):
         genotype_list = [item[0] for item in pop_list]
         
         counter = Counter(map(tuple, genotype_list))
-        print(counter.most_common(1))
+        #print(counter.most_common(1))
         if counter.most_common(1)[0][1] > population_size * 0.6:
             return max(pop_list, key=lambda x: x[1])[1], i
         
