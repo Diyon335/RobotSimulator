@@ -33,25 +33,23 @@ def generational_replacement(genotype_dictionary, offspring):
         genotype_dictionary[i] = child
 
 
-def generational_rollover(genotype_dictionary, offspring):
+def generational_rollover(population_dictionary, offspring_dictionary):
     """
     Modifies the dictionary provided
-
-    Replaces the n worst genotypes in the generation, where n is the number of offspring per generation
-
-    :param offspring: List of IDs of the offspring/best parents
-    :param genotype_dictionary: The dictionary containing all genotypes
+    Replaces the least fit individuals in the population with the offsprings
+    :param population_dictionary: The dictionary containing all individuals in the population
+    :param offspring_dictionary: Dictionary of the offspring/best parents
     :return: None
     """
 
-    n = len(offspring)
+    n = len(offspring_dictionary)
 
     # Lowest fitness --> Highest fitness
-    genotype_list = sorted(genotype_dictionary.items(), key=lambda genotype: genotype[1][1], reverse=False)
+    population_list = sorted(population_dictionary.items(), key=lambda individual: individual[1][1])
 
     # Get the IDs (index 0 in the list) of the worst individuals starting from the worst to the nth worst
-    worst_individuals = [genotype_list[i][0] for i in range(0, n)]
+    worst_individuals = [population_list[i][0] for i in range(0, n)]
 
     # Replace each worst ID with the offspring
-    for good_parent, bad_individual in zip(offspring, worst_individuals):
-        genotype_dictionary[bad_individual] = copy.copy(genotype_dictionary[good_parent])
+    for bad_individual, offspring in zip(worst_individuals, offspring_dictionary):
+        population_dictionary[bad_individual] = offspring_dictionary[offspring]
