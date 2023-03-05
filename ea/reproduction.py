@@ -2,6 +2,7 @@
 This file contains reproduction strategies
 """
 import operator
+import copy
 
 
 def generational_replacement(genotype_dictionary, offspring):
@@ -53,5 +54,4 @@ def generational_rollover(genotype_dictionary, offspring):
 
     # Replace each worst ID with the offspring
     for good_parent, bad_individual in zip(offspring, worst_individuals):
-        genotype_dictionary[bad_individual] = genotype_dictionary[good_parent]
-
+        genotype_dictionary[bad_individual] = copy.copy(genotype_dictionary[good_parent])

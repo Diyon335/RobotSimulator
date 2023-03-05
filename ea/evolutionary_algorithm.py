@@ -14,14 +14,14 @@ from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 genotype_history = []
 genotypes = {}
 
-number_of_genotypes = 10
+number_of_genotypes = 50
 
 generations = 100
 
 offspring_per_generation = 2
 
 # Variables for the encoding strategy
-genotype_length = 5
+genotype_length = 12
 genotype_min_range = -10
 genotype_max_range = 10
 whole_numbers = True
@@ -47,7 +47,7 @@ encoding_strategy = real_number_encoding
 phenotype_computer = get_xy_phenotype
 cost_function = cost_rosenbrock
 selection_strategy = tournament_selection
-reproduction_strategy = generational_replacement
+reproduction_strategy = generational_rollover
 mutation_strategy = one_point_crossover
 
 
@@ -109,6 +109,10 @@ def run_algorithm():
 
         genotype_history.append(generation)
 
+        print()
+        print("Generation "+str(i))
+        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
+
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
         # Holds the IDs of the parents that will be copied
@@ -121,10 +125,21 @@ def run_algorithm():
 
         # REPRODUCTION
         reproduction_strategy(genotypes, offspring)
+        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
+        print(genotypes)
 
         # MUTATION / CROSS OVER
         key_list = choose_parents(genotypes)
+        print(key_list)
         mutation_strategy(genotypes, key_list)
+        for id in key_list:
+            genotype = genotypes[id][0]
+            genotypes[id][2] = phenotype_computer(genotype)
+            x, y = genotypes[id][2]
+            genotypes[id][1] = -cost_function(x, y)
+
+        print(sorted([(genotypes[individual][1]) for individual in genotypes]))
+        print()
 
 
 def animate_evolution():
