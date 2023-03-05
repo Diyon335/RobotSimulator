@@ -25,7 +25,7 @@ def tournament_selection(genotype_dictionary, k=5):
     sampled_genotypes = [genotype_dictionary[genotype] for genotype in genotypes_to_sample]
 
     # Gets the best genotype from the sample based on the 1st index (fitness)
-    best_genotype = min(sampled_genotypes, key=lambda genotype: genotype[1])
+    best_genotype = max(sampled_genotypes, key=lambda genotype: genotype[1])
 
     genotype_values = list(genotype_dictionary.values())
 

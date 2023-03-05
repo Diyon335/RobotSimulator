@@ -47,7 +47,7 @@ encoding_strategy = real_number_encoding
 phenotype_computer = get_xy_phenotype
 cost_function = cost_rosenbrock
 selection_strategy = tournament_selection
-reproduction_strategy = generational_rollover
+reproduction_strategy = generational_replacement
 mutation_strategy = one_point_crossover
 
 
