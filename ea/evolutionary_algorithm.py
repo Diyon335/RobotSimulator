@@ -3,7 +3,6 @@ This file initialises, allows the modification of parameters and runs the evolut
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import copy
 import random
 from celluloid import Camera
 from matplotlib import colors
@@ -14,6 +13,7 @@ from ea.crossover_mutation import choose_pair, one_point_crossover, uniform_cros
 from ea.reproduction import generational_replacement, generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 
+output_directory = "animations/ea_benchmark/diyon/"
 genotype_history = []
 population_dictionary = {}
 
@@ -49,7 +49,7 @@ actually those that the strategy/functions require
 """
 encoding_strategy = real_number_encoding
 phenotype_computer = get_xy_phenotype
-cost_function = cost_rosenbrock
+cost_function = cost_rastrigin
 selection_strategy = tournament_selection
 reproduction_strategy = generational_rollover
 
@@ -209,5 +209,7 @@ def animate_evolution():
 
     # Animates
     animation = camera.animate(interval=200, repeat=False, repeat_delay=500)
-    # animation.save("test.gif")
+    # animation.save(output_directory +
+    #                f"{cost_function.__name__}_pop{population_size}_offs{offsprings_per_generation}_gens{generations}_"
+    #                f"tk{tournament_k}_mr{mutation_rate}.gif")
     plt.show()
