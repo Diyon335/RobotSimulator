@@ -62,7 +62,7 @@ def initialise():
     int : [[list], int, int int]
     <ID> : [genotype], fitness, tuple(phenotype_x, phenotype_y)
 
-    :return: two lists containing max fitness and average fitness at all generations (for testing purposes)
+    :return: none
     """
 
     generation = []
