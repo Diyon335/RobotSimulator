@@ -227,21 +227,19 @@ def test_helper(results, value, tests):
         for gen in range(generations):
             avg_max_fitnesses[gen] += max_fitness_history[gen]
             avg_avg_fitnesses[gen] += avg_fitness_history[gen]
-        print(itter)
 
     return [f/tests for f in avg_max_fitnesses], [f/tests for f in avg_avg_fitnesses]
 
-def testing_routine(parameter_set, parameter, tests=100):
+
+def testing_routine(parameter_set, parameter, tests=10):
 
     results = {}
 
     if parameter == "tournament_k":
 
-        offsprings_per_generation = 30
-        mutation_rate = 3
-
         for value in parameter_set:
 
+            global tournament_k
             tournament_k = value
             avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
 
@@ -250,9 +248,6 @@ def testing_routine(parameter_set, parameter, tests=100):
             print("Finished with value " + str(value))
 
     elif parameter == "offsprings_per_generation":
-
-        tournament_k = 6
-        mutation_rate = 3
 
         for value in parameter_set:
 
@@ -264,9 +259,6 @@ def testing_routine(parameter_set, parameter, tests=100):
             print("Finished with value " + str(value))
 
     elif parameter == "mutation_rate":
-
-        offsprings_per_generation = 30
-        tournament_k = 6
 
         for value in parameter_set:
 

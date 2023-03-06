@@ -37,7 +37,13 @@ if __name__ == '__main__':
     # I suggest using the following parameter sets:
     # [3, 4, 5, 6, 10, 15, 20] for tournament_k
     # [2, 5, 10, 15, 20, 30, 40, 50] for offsprings_per_generations
-    # [3, 5, 10, 15, 20] for mutation_rate
-    parameter_set = [3, 10, 20]
+    # [0, 3, 5, 10, 15, 20] for mutation_rate
+    parameter_set = [3, 4, 5, 6, 10, 15, 20]
 
     results = testing_routine(parameter_set, parameter, tests)
+    print()
+    for key in results:
+        print(key)
+        for elem in results[key]:
+            print(elem)
+        print()
