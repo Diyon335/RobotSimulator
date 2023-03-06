@@ -17,8 +17,8 @@ def generational_replacement(genotype_dictionary, offspring):
     """
 
     # The new population size must be equal to the old population size
-    # if len(offspring) != len(genotype_dictionary):
-    #     raise Exception("The number of new offspring does not match the number of old genotypes")
+    if len(offspring) != len(genotype_dictionary):
+        raise Exception("The number of new offspring does not match the number of old genotypes")
 
     # Build a new list of offspring
     offspring_list = []
@@ -26,7 +26,7 @@ def generational_replacement(genotype_dictionary, offspring):
     for genotype_id in offspring:
         offspring_list.append(genotype_dictionary[genotype_id])
 
-    # genotype_dictionary.clear()
+    genotype_dictionary.clear()
 
     # Copy elements from offspring dictionary to genotype dictionary
     for i, child in enumerate(offspring_list):
