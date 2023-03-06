@@ -31,7 +31,7 @@ if __name__ == '__main__':
     tests = 100
 
     # parameter = "tournament_k"
-    parameter = "offsprings_per_generations"
+    parameter = "offsprings_per_generation"
     # parameter = "mutation_rate"
 
     # I suggest using the following parameter sets:
