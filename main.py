@@ -59,5 +59,5 @@ if __name__ == '__main__':
         # plt.xlim([0, 20])
         plt.xlabel('Generation')
         plt.ylabel('Fitness')
-        fig_max.savefig(f'tournament_k_{key}.jpg')
+        fig_max.savefig(f'offsprings_per_generation_{key}.jpg')
         

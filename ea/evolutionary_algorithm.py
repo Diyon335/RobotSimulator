@@ -45,7 +45,7 @@ actually those that the strategy/functions require
 """
 encoding_strategy = real_number_encoding
 phenotype_computer = get_xy_phenotype
-cost_function = cost_rastrigin
+cost_function = cost_rosenbrock
 selection_strategy = tournament_selection
 reproduction_strategy = generational_rollover
 
