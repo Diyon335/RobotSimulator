@@ -10,11 +10,11 @@ from matplotlib import colors
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
 from ea.crossover_mutation import choose_pair, one_point_crossover, uniform_crossover, arithmetic_crossover, mutation
-from ea.reproduction import generational_replacement, generational_rollover
+from ea.reproduction import generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 
 output_directory = "animations/ea_benchmark/diyon/"
-genotype_history = []
+phenotype_history = []
 population_dictionary = {}
 
 population_size = 50
@@ -71,9 +71,9 @@ def initialise():
         x, y = phenotype_computer(genotype)
         generation.append((x, y))
 
-        population_dictionary[individual] = [genotype, 0, (x, y)]
+        population_dictionary[individual] = [genotype, -cost_function(x, y), phenotype_computer(genotype)]
 
-    genotype_history.append(generation)
+    phenotype_history.append(generation)
 
 
 def run_algorithm():
@@ -89,27 +89,12 @@ def run_algorithm():
 
     initialise()
 
+    features = list(population_dictionary.values())
+    features.sort(key=lambda feature: feature[1])
+    max_fitness_history.append(features[-1][1])
+    avg_fitness_history.append(sum([ind[1] for ind in features]) / len(features))
+
     for i in range(generations):
-
-        # EVALUATION
-        # For each genotype, compute the fitness
-        generation = []
-        for individual in population_dictionary:
-
-            # We don't need to get phenotypes for the first generation since it's already done in initialise()
-            if i > 0:
-                # Replace old phenotype
-                genotype = population_dictionary[individual][0]
-                population_dictionary[individual][2] = phenotype_computer(genotype)
-
-            # Get phenotype
-            x, y = population_dictionary[individual][2]
-            generation.append((x, y))
-
-            # Replace current fitness
-            population_dictionary[individual][1] = -cost_function(x, y)
-
-        genotype_history.append(generation)
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -156,12 +141,21 @@ def run_algorithm():
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
-        # print(population_dictionary)
         features = list(population_dictionary.values())
         features.sort(key=lambda feature: feature[1])
-        # print([(ind[1], ind[2]) for ind in features])
         max_fitness_history.append(features[-1][1])
         avg_fitness_history.append(sum([ind[1] for ind in features])/len(features))
+
+        # EVALUATION
+        # For each individual, add phenotype to phenotype history
+        # (at generation 0 this is done by initialise())
+        generation = []
+        for individual in population_dictionary:
+            # Get phenotype
+            x, y = population_dictionary[individual][2]
+            generation.append((x, y))
+
+        phenotype_history.append(generation)
 
     return max_fitness_history, avg_fitness_history
 
@@ -182,9 +176,9 @@ def animate_evolution():
 
     Z = cost_function(X, Y)
 
-    for i in range(len(genotype_history)):
+    for i in range(len(phenotype_history)):
 
-        generation = genotype_history[i]
+        generation = phenotype_history[i]
 
         # Holds all phenotypes of all genotypes
         x, y = [], []
@@ -218,20 +212,25 @@ def animate_evolution():
 
 def test_helper(results, value, tests):
 
-    avg_max_fitnesses = [0 for _ in range(generations)]
-    avg_avg_fitnesses = [0 for _ in range(generations)]
+    avg_max_fitnesses = [0 for _ in range(generations+1)]
+    avg_avg_fitnesses = [0 for _ in range(generations+1)]
     results[value] = []
 
     for itter in range(tests):
         max_fitness_history, avg_fitness_history = run_algorithm()
-        for gen in range(generations):
-            avg_max_fitnesses[gen] += max_fitness_history[gen]
-            avg_avg_fitnesses[gen] += avg_fitness_history[gen]
+        for i in range(len(max_fitness_history)):
+            avg_max_fitnesses[i] += max_fitness_history[i]
+            avg_avg_fitnesses[i] += avg_fitness_history[i]
 
     return [f/tests for f in avg_max_fitnesses], [f/tests for f in avg_avg_fitnesses]
 
 
-def testing_routine(parameter_set, parameter, tests=10):
+def testing_routine(parameter_set, parameter, tests=100, short=False):
+
+    if short:
+        global generations
+        generations = 10
+        tests = 10
 
     results = {}
 
