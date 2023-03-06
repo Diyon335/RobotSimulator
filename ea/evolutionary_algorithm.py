@@ -52,8 +52,9 @@ reproduction_strategy = generational_rollover
 
 def initialise():
     """
-    This function populates the genotype dictionary by using the specified encoding strategy.
-    Each genotype has a key (integer), a fitness which is initially 0, and its corresponding phenotype
+    This function populates the population dictionary by using the specified encoding strategy.
+    Each individual has a key (integer), a genotype array, a fitness and a corresponding phenotype.
+    The function also adds the phenotypes of all these initial individuals to the phenotype history array
 
     The dictionary will be of the form:
 
@@ -61,7 +62,7 @@ def initialise():
     int : [[list], int, int int]
     <ID> : [genotype], fitness, tuple(phenotype_x, phenotype_y)
 
-    :return: None
+    :return: two lists containing max fitness and average fitness at all generations (for testing purposes)
     """
 
     generation = []
@@ -81,7 +82,9 @@ def run_algorithm():
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
 
-    :return: None
+    :return: a max fitness array and an average fitness array, both of length equal to number of generations + 1
+            (to include "generation 0" after initialisation but before any reproduction has taken place), containing
+            max fitness and average fitness of the population at every generation
     """
 
     max_fitness_history = []
@@ -104,16 +107,16 @@ def run_algorithm():
         for j in range(offsprings_per_generation):
 
             best_parent = selection_strategy(population_dictionary, k=tournament_k)
-            # offspring_dictionary[j] = copy.copy(population_dictionary[best_parent])
 
+            # offspring is initialised (genotype is set as empty, fitness and phenotype are set to 0)
             offspring_dictionary[j] = [[], 0, (0, 0)]
 
+            # genotype of offspring is copied over from parent
             for gene in population_dictionary[best_parent][0]:
                 offspring_dictionary[j][0].append(gene)
 
-        # MUTATION / CROSS OVER
+        # CROSS OVER
         crossover_events = int(random.uniform(0.1, 0.4)*offsprings_per_generation)
-        # crossover_events = 1
 
         for _ in range(crossover_events):
 
@@ -127,10 +130,13 @@ def run_algorithm():
             else:
                 arithmetic_crossover(offspring_dictionary, offspring_pair)
 
+        # MUTATION
         for target_offspring in offspring_dictionary:
             mutation(offspring_dictionary, target_offspring, mutation_rate)
 
         # REPRODUCTION
+        # before offsprings are added into the population, but after they have undergone crossover and mutation events
+        # (so that their genotype is "finalised"), their fitness and phenotype is computed
         for offspring in offspring_dictionary:
 
             genotype = offspring_dictionary[offspring][0]
@@ -141,6 +147,8 @@ def run_algorithm():
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
+        # max fitness and average fitness of the population are extracted and appended to the max fitness and
+        # average fitness arrays
         features = list(population_dictionary.values())
         features.sort(key=lambda feature: feature[1])
         max_fitness_history.append(features[-1][1])
@@ -211,6 +219,16 @@ def animate_evolution():
 
 
 def test_helper(results, value, tests):
+    """
+    A helper function to make code more concise
+    Initialises average max fitness and average average fitness arrays, runs the evolutionary algorithm multiple times
+    and fills said arrays across iterations and appends said arrays into the dictionary of results
+
+    :param results: The dictionary of results
+    :param value: The value for the parameter being investigated
+    :param tests: The number of times the evolutionary algorithm should be run
+    :return: None
+    """
 
     avg_max_fitnesses = [0 for _ in range(generations+1)]
     avg_avg_fitnesses = [0 for _ in range(generations+1)]
@@ -222,10 +240,25 @@ def test_helper(results, value, tests):
             avg_max_fitnesses[i] += max_fitness_history[i]
             avg_avg_fitnesses[i] += avg_fitness_history[i]
 
-    return [f/tests for f in avg_max_fitnesses], [f/tests for f in avg_avg_fitnesses]
+    # the dictionary of results is modified in place
+    results[value].append(avg_max_fitnesses)
+    results[value].append(avg_avg_fitnesses)
 
 
 def testing_routine(parameter_set, parameter, tests=100, short=False):
+    """
+    The function that handles running multiple experiments with different values for a given parameter
+    to be investigated
+
+    :param parameter_set: A list of values for the parameter to be investigated
+    :param parameter: The parameter of the evolutionary algorithm under investigation
+    :param tests: The number of times the evolutionary algorithm should be run to test a single value for the parameter
+    :param short: A boolean to indicate whether the user wants to run a simple and quick testing routine
+
+    :return: A dictionary of results, the keys are values for a parameter being investigated in a testing routine
+            and values are lists of two arrays, the first containing average max fitness at every generation
+            of the genetic algorithm and the second containing average average fitness at every generation
+    """
 
     if short:
         global generations
@@ -240,10 +273,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
             global tournament_k
             tournament_k = value
-            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
-
-            results[value].append(avg_max_fitnesses)
-            results[value].append(avg_avg_fitnesses)
+            test_helper(results, value, tests)
             print("Finished with value " + str(value))
 
     elif parameter == "offsprings_per_generation":
@@ -251,10 +281,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
         for value in parameter_set:
 
             offsprings_per_generation = value
-            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
-
-            results[value].append(avg_max_fitnesses)
-            results[value].append(avg_avg_fitnesses)
+            test_helper(results, value, tests)
             print("Finished with value " + str(value))
 
     elif parameter == "mutation_rate":
@@ -262,10 +289,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
         for value in parameter_set:
 
             mutation_rate = value
-            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
-
-            results[value].append(avg_max_fitnesses)
-            results[value].append(avg_avg_fitnesses)
+            test_helper(results, value, tests)
             print("Finished with value "+str(value))
 
     return results
