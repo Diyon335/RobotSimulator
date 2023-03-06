@@ -29,12 +29,8 @@ genotype_min_range = -10
 genotype_max_range = 10
 whole_numbers = False
 
-# Variables for the evaluation strategy
-
 # Variables for the selection strategy
 tournament_k = 6
-
-# Variables for the reproduction strategy
 
 # Variables for the crossover/mutation strategies
 mutation_rate = 3
@@ -88,6 +84,9 @@ def run_algorithm():
     :return: None
     """
 
+    max_fitness_history = []
+    avg_fitness_history = []
+
     initialise()
 
     for i in range(generations):
@@ -138,10 +137,8 @@ def run_algorithm():
 
             if rng < 33:
                 one_point_crossover(offspring_dictionary, offspring_pair)
-
             elif rng < 66:
                 uniform_crossover(offspring_dictionary, offspring_pair)
-
             else:
                 arithmetic_crossover(offspring_dictionary, offspring_pair)
 
@@ -163,6 +160,10 @@ def run_algorithm():
         features = list(population_dictionary.values())
         features.sort(key=lambda feature: feature[1])
         # print([(ind[1], ind[2]) for ind in features])
+        max_fitness_history.append(features[-1][1])
+        avg_fitness_history.append(sum([ind[1] for ind in features])/len(features))
+
+    return max_fitness_history, avg_fitness_history
 
 
 def animate_evolution():
@@ -213,3 +214,67 @@ def animate_evolution():
     #                f"{cost_function.__name__}_pop{population_size}_offs{offsprings_per_generation}_gens{generations}_"
     #                f"tk{tournament_k}_mr{mutation_rate}.gif")
     plt.show()
+
+
+def test_helper(results, value, tests):
+
+    avg_max_fitnesses = [0 for _ in range(generations)]
+    avg_avg_fitnesses = [0 for _ in range(generations)]
+    results[value] = []
+
+    for itter in range(tests):
+        max_fitness_history, avg_fitness_history = run_algorithm()
+        for gen in range(generations):
+            avg_max_fitnesses[gen] += max_fitness_history[gen]
+            avg_avg_fitnesses[gen] += avg_fitness_history[gen]
+        print(itter)
+
+    return [f/tests for f in avg_max_fitnesses], [f/tests for f in avg_avg_fitnesses]
+
+def testing_routine(parameter_set, parameter, tests=100):
+
+    results = {}
+
+    if parameter == "tournament_k":
+
+        offsprings_per_generation = 30
+        mutation_rate = 3
+
+        for value in parameter_set:
+
+            tournament_k = value
+            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
+
+            results[value].append(avg_max_fitnesses)
+            results[value].append(avg_avg_fitnesses)
+            print("Finished with value " + str(value))
+
+    elif parameter == "offsprings_per_generation":
+
+        tournament_k = 6
+        mutation_rate = 3
+
+        for value in parameter_set:
+
+            offsprings_per_generation = value
+            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
+
+            results[value].append(avg_max_fitnesses)
+            results[value].append(avg_avg_fitnesses)
+            print("Finished with value " + str(value))
+
+    elif parameter == "mutation_rate":
+
+        offsprings_per_generation = 30
+        tournament_k = 6
+
+        for value in parameter_set:
+
+            mutation_rate = value
+            avg_max_fitnesses, avg_avg_fitnesses = test_helper(results, value, tests)
+
+            results[value].append(avg_max_fitnesses)
+            results[value].append(avg_avg_fitnesses)
+            print("Finished with value "+str(value))
+
+    return results
