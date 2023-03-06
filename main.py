@@ -34,21 +34,37 @@ if __name__ == '__main__':
     print("DONE!!!")
     #animate_evolution()
 
-    mutation_rates = np.arange(0, 20.5, 0.5)
+    benchmark = 'Rosenbrock'
+    parameter = 'Mutation_rate'
+    param_set = np.arange(0, 20.5, 0.5)
     avg_best = []
     avg_itter_count = []
 
-    for rate in mutation_rates:
+    for param in param_set:
         hist_best = []
         hist_itter_count = []
         for i in range(30):
-            run_best, run_itter = run_algorithm(rate)
+            run_best, run_itter = run_algorithm(param)
             hist_best.append(run_best)
             hist_itter_count.append(run_itter)
         avg_best.append(sum(hist_best) / 30)
         avg_itter_count.append(sum(hist_itter_count) / 30)
-        # time.sleep(1)
-        print(rate)
+        print(param)
 
     print(avg_itter_count)
     print(avg_best)
+
+    fig_conv = plt.figure()
+    plt.plot(param_set, avg_itter_count, 'ob')
+    fig_conv.suptitle(f'Comparing convergence of EA on {benchmark} with varying {parameter}')
+    plt.xlabel(parameter)
+    plt.ylabel('Average Itteration Count')
+    fig_conv.savefig(f'{parameter}_convergence.jpg')
+    plt.clf()
+
+    fig_best = plt.figure()
+    plt.plot(param_set, avg_best, 'ob')
+    fig_best.suptitle(f'Comparing performacne of EA on {benchmark} with varying {parameter}')
+    plt.xlabel(parameter)
+    plt.ylabel('Average Best Fitness')
+    fig_best.savefig(f'{parameter}_fitness.jpg')
