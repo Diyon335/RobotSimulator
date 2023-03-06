@@ -208,5 +208,6 @@ def animate_evolution():
     ax.set_ylabel("y")
 
     # Animates
-    animation = camera.animate(interval=100, repeat=True, repeat_delay=500)
+    animation = camera.animate(interval=200, repeat=False, repeat_delay=500)
+    # animation.save("test.gif")
     plt.show()
