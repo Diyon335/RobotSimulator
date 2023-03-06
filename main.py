@@ -40,10 +40,23 @@ if __name__ == '__main__':
     # [0, 3, 5, 10, 15, 20] for mutation_rate
     parameter_set = [3, 4, 5, 6, 10, 15, 20]
 
-    results = testing_routine(parameter_set, parameter, tests)
+    results = testing_routine(parameter_set, parameter, tests, True)
     print()
     for key in results:
         print(key)
         for elem in results[key]:
             print(elem)
         print()
+
+    for key in parameter_set:
+        fig_max = plt.figure()
+        x1 = results[key][0]
+        x2 = results[key][1]
+        line_max = plt.plot(x1, 'g', label='Max_fitness')
+        line_avg = plt.plot(x2, 'b', label='Average_fitness')
+        plt.title(f'Generation vs. Fitness for {parameter} = {key}')
+        plt.legend()
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        fig_max.savefig(f'tournament_k_{key}.jpg')
+        
