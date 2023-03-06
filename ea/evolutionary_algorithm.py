@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import copy
 import random
 from celluloid import Camera
+from matplotlib import colors
 
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
@@ -163,17 +164,15 @@ def animate_evolution():
     fig, ax = plt.subplots()
     camera = Camera(fig)
 
-    # Create x, y values from min --> max in steps of 0.01
-    x_heatmap = np.arange(genotype_min_range, genotype_max_range, 0.01)
-    y_heatmap = np.arange(genotype_min_range, genotype_max_range, 0.01)
+    n = 100
+    X = np.linspace(genotype_min_range, genotype_max_range, n)
+    Y = np.linspace(genotype_min_range, genotype_max_range, n)
+    X, Y = np.meshgrid(X, Y)
 
-    # Get the cost of every x, y combination
-    z_heatmap = np.zeros((len(x_heatmap), len(y_heatmap)))
-    for n in range(len(x_heatmap)):
-        for j in range(len(y_heatmap)):
-            z_heatmap[n][j] = cost_function(x_heatmap[n], y_heatmap[j])
+    Z = cost_function(X, Y)
 
     for i in range(len(genotype_history)):
+
         generation = genotype_history[i]
 
         # Holds all phenotypes of all genotypes
@@ -185,16 +184,18 @@ def animate_evolution():
             y.append(phenotype_y)
 
         # Plot all phenotypes
-        ax.scatter(x, y, c="#000000")
+        ax.plot(x, y, 'bo', c="#000000")
         ax.set_xlim([genotype_min_range, genotype_max_range])
         ax.set_ylim([genotype_min_range, genotype_max_range])
         ax.text(0.4, 1.01, f"Generation {i+1}", transform=ax.transAxes)
         camera.snap()
 
-    im = ax.imshow(z_heatmap, cmap=plt.cm.get_cmap('rainbow'),
-                   extent=(genotype_min_range, genotype_max_range, genotype_min_range, genotype_max_range))
+    im = plt.contourf(X, Y, Z, levels=50, cmap="jet") if cost_function == cost_rastrigin else \
+         plt.pcolor(X, Y, Z, norm=colors.LogNorm(vmin=Z.min(), vmax=Z.max()), cmap='jet', shading='auto')
 
-    fig.colorbar(im, orientation='vertical')
+    fig.colorbar(im, orientation='vertical', extend='max')
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
 
     # Animates
     animation = camera.animate(interval=200, repeat=True, repeat_delay=500)
