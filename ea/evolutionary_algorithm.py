@@ -121,20 +121,27 @@ def run_algorithm():
 
             best_parent = selection_strategy(population_dictionary, k=tournament_k)
             # offspring_dictionary[j] = copy.copy(population_dictionary[best_parent])
+
             offspring_dictionary[j] = [[], 0, (0, 0)]
+
             for gene in population_dictionary[best_parent][0]:
                 offspring_dictionary[j][0].append(gene)
 
         # MUTATION / CROSS OVER
         crossover_events = int(random.uniform(0.1, 0.4)*offsprings_per_generation)
         # crossover_events = 1
+
         for _ in range(crossover_events):
+
             offspring_pair = choose_pair(offspring_dictionary)
             rng = random.randint(0, 99)
+
             if rng < 33:
                 one_point_crossover(offspring_dictionary, offspring_pair)
+
             elif rng < 66:
                 uniform_crossover(offspring_dictionary, offspring_pair)
+
             else:
                 arithmetic_crossover(offspring_dictionary, offspring_pair)
 
@@ -143,16 +150,19 @@ def run_algorithm():
 
         # REPRODUCTION
         for offspring in offspring_dictionary:
+
             genotype = offspring_dictionary[offspring][0]
             offspring_dictionary[offspring][2] = phenotype_computer(genotype)
+
             x, y = offspring_dictionary[offspring][2]
             offspring_dictionary[offspring][1] = -cost_function(x, y)
+
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
         # print(population_dictionary)
         features = list(population_dictionary.values())
         features.sort(key=lambda feature: feature[1])
-        print([(ind[1], ind[2]) for ind in features])
+        # print([(ind[1], ind[2]) for ind in features])
 
 
 def animate_evolution():
@@ -198,5 +208,5 @@ def animate_evolution():
     ax.set_ylabel("y")
 
     # Animates
-    animation = camera.animate(interval=200, repeat=True, repeat_delay=500)
+    animation = camera.animate(interval=100, repeat=True, repeat_delay=500)
     plt.show()
