@@ -34,7 +34,7 @@ if __name__ == '__main__':
     print("DONE!!!")
     #animate_evolution()
 
-    mutation_rates = np.arange(0, 100.5, 0.5)
+    mutation_rates = np.arange(0, 20.5, 0.5)
     avg_best = []
     avg_itter_count = []
 
@@ -51,3 +51,4 @@ if __name__ == '__main__':
         print(rate)
 
     print(avg_itter_count)
+    print(avg_best)
