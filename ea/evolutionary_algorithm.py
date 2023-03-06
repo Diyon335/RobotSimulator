@@ -118,25 +118,26 @@ def run_algorithm(placeholder):
 
         ## Stoping condition:
         ##      return early when >50% of individuals have the same genotype
-        pop_list = list(population_dictionary.values())
-        fitness_list = [item[1] for item in pop_list]
-        gen_best_fitness = max(fitness_list)
-        
-        if gen_best_fitness <= best_fitness:
-            if counter < 10:
-                counter += 1
+        stop_early = False
+        if stop_early:
+            pop_list = list(population_dictionary.values())
+            fitness_list = [item[1] for item in pop_list]
+            gen_best_fitness = max(fitness_list)
+            
+            if gen_best_fitness <= best_fitness:
+                if counter < 10:
+                    counter += 1
+                else:
+                    return gen_best_fitness, i
             else:
-                print(f'Exited at {i} itterations')
-                return gen_best_fitness, i
-        else:
-            counter = 0
-            best_fitness = gen_best_fitness
-        # genotype_list = [item[0] for item in pop_list]
-        # counter = Counter(map(tuple, genotype_list))
-        # #print(counter.most_common(1))
-        # if counter.most_common(1)[0][1] > population_size * 0.6:
-        #     return max(pop_list, key=lambda x: x[1])[1], i
-        
+                counter = 0
+                best_fitness = gen_best_fitness
+            # genotype_list = [item[0] for item in pop_list]
+            # counter = Counter(map(tuple, genotype_list))
+            # #print(counter.most_common(1))
+            # if counter.most_common(1)[0][1] > population_size * 0.6:
+            #     return max(pop_list, key=lambda x: x[1])[1], i
+            
 
 
         # SELECTION
