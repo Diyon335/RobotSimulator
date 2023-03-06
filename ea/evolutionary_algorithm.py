@@ -280,6 +280,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
         for value in parameter_set:
 
+            global offsprings_per_generation
             offsprings_per_generation = value
             test_helper(results, value, tests)
             print("Finished with value " + str(value))
@@ -288,6 +289,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
         for value in parameter_set:
 
+            global mutation_rate
             mutation_rate = value
             test_helper(results, value, tests)
             print("Finished with value "+str(value))

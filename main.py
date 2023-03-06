@@ -30,17 +30,17 @@ if __name__ == '__main__':
 
     tests = 100
 
-    parameter = "tournament_k"
-    # parameter = "offsprings_per_generations"
+    # parameter = "tournament_k"
+    parameter = "offsprings_per_generations"
     # parameter = "mutation_rate"
 
     # I suggest using the following parameter sets:
     # [3, 4, 5, 6, 10, 15, 20] for tournament_k
     # [2, 5, 10, 15, 20, 30, 40, 50] for offsprings_per_generations
     # [0, 3, 5, 10, 15, 20] for mutation_rate
-    parameter_set = [3, 4, 5, 6, 10, 15, 20]
+    parameter_set = [2, 5, 10, 15, 20, 30, 40, 50]
 
-    results = testing_routine(parameter_set, parameter, tests, True)
+    results = testing_routine(parameter_set, parameter, tests)
     print()
     for key in results:
         print(key)
@@ -56,6 +56,7 @@ if __name__ == '__main__':
         line_avg = plt.plot(x2, 'b', label='Average_fitness')
         plt.title(f'Generation vs. Fitness for {parameter} = {key}')
         plt.legend()
+        # plt.xlim([0, 20])
         plt.xlabel('Generation')
         plt.ylabel('Fitness')
         fig_max.savefig(f'tournament_k_{key}.jpg')
