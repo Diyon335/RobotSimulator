@@ -37,7 +37,7 @@ tournament_k = 6
 # Variables for the reproduction strategy
 
 # Variables for the crossover/mutation strategies
-mutation_rate = 3
+mutation_rate = 5
 
 
 """
