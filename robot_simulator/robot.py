@@ -193,14 +193,10 @@ class Robot:
         new_theta = new_pos_orient[2]
         new_pos = (new_pos_orient[0], new_pos_orient[1])
 
-        # Recursive check for legal position
         legal = False
         while not legal:
-
-            # new_pos, legal = self.correct_pos(new_pos)
             new_pos, legal = self.correct_pos2(old_pos, new_pos)
-            # new_pos, legal = self.correct_pos_shapely(new_pos)
-
+        print(f"final pos: {new_pos}")
         # Set new position and orientation
         self.pos = new_pos
         self.theta = new_theta
@@ -409,14 +405,12 @@ class Robot:
 
             # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
             if circle_intersection_points.is_empty and line_intersection_points.is_empty:
-                print(f"NO intersections")
                 continue
 
             # Does the circle intersect at two points on the same wall? --> midpoint
             if type(circle_intersection_points) is MultiPoint:
 
                 if len(circle_intersection_points.geoms) == 2:
-                    print(f"Two intersections, so finding midpoint")
                     p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
                     p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
 
@@ -432,7 +426,7 @@ class Robot:
 
             # Does the circle intersect just one point on the wall? Add it as a single point
             if type(circle_intersection_points) == SPoint:
-                print(f"One intersection with circle")
+
                 distance_to_point = new_centre.distance(circle_intersection_points)
                 circle_distances[distance_to_point] = circle_intersection_points, wall
 
@@ -445,7 +439,7 @@ class Robot:
 
             # If a single point
             if type(line_intersection_points) == SPoint:
-                print(f"One line intersection")
+
                 distance_to_point = old_centre.distance(line_intersection_points)
                 line_distances[distance_to_point] = line_intersection_points, wall
 
@@ -466,49 +460,50 @@ class Robot:
 
             distances = list(circle_distances.keys())
 
-            if len(distances) == 1:
-                print(f"Just a wall")
-                minimum_distance = min(circle_distances.keys())
-                closest_point, wall = circle_distances[minimum_distance]
+            minimum_distance = min(circle_distances.keys())
+            closest_point, wall = circle_distances[minimum_distance]
 
-                shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+            normal_line = self.get_normal_vector(wall)
+            normal_line_inclination = self.get_normal_line_inclination(normal_line)
 
-                return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+            return self.get_corrected_xy(closest_point, normal_line_inclination), True
 
-            # If it collides with two or more walls, we want the two closest walls
-            if len(distances) > 1:
-                print(f"Corner")
-                distances.sort()
-                p1, wall1 = circle_distances[distances[0]]
-                p2, wall2 = circle_distances[distances[1]]
-
-                points = [p1, p2]
-                x, y = [], []
-
-                # The new position will be the average of both walls' corrections
-                for point in points:
-                    shortest_line_inclination = self.get_shortest_line_inclination(point)
-                    est_x, est_y = self.get_corrected_xy(point, shortest_line_inclination, induce_sliding=False)
-                    x.append(est_x)
-                    y.append(est_y)
-
-                return (np.mean(x), np.mean(y)), True
+            # # If it collides with two or more walls, we want the two closest walls
+            # if len(distances) > 1:
+            #
+            #     distances.sort()
+            #     p1, wall1 = circle_distances[distances[0]]
+            #     p2, wall2 = circle_distances[distances[1]]
+            #
+            #     points = [p1, p2]
+            #     walls = [wall1, wall2]
+            #     x, y = [], []
+            #
+            #     # The new position will be the average of both walls' corrections
+            #     for point, wall in zip(points, walls):
+            #         normal_line = self.get_normal_vector(wall)
+            #         normal_line_inclination = self.get_normal_line_inclination(normal_line)
+            #         est_x, est_y = self.get_corrected_xy(point, normal_line_inclination)
+            #         x.append(est_x)
+            #         y.append(est_y)
+            #
+            #     return (np.mean(x), np.mean(y)), True
 
         # The only remaining case is line intersections
         minimum_distance = min(line_distances.keys())
         closest_point, wall = line_distances[minimum_distance]
 
-        shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+        normal_line = self.get_normal_vector(wall)
+        normal_line_inclination = self.get_normal_line_inclination(normal_line)
 
-        return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+        return self.get_corrected_xy(closest_point, normal_line_inclination), True
 
-    def get_corrected_xy(self, intersection_point, shortest_line_inclination, induce_sliding=True):
+    def get_corrected_xy(self, intersection_point, normal_line_inclination):
         """
         Gets the corrected centre position of the robot
 
-        :param induce_sliding: A boolean indicating whether the robot should slide
+        :param normal_line_inclination:
         :param intersection_point: SPoint object indicating the closest intersection point
-        :param shortest_line_inclination: The inclination of the line connecting the robot's centre to the
         intersection point
         :return: A tuple of integers indicating the robot's new centre (x, y)
         """
@@ -517,51 +512,34 @@ class Robot:
 
         # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
         # intersection point
-        x_offset = -(robot_radius + robot_border_size) * np.cos(shortest_line_inclination)
-        y_offset = -(robot_radius + robot_border_size) * np.sin(shortest_line_inclination)
+        x_offset = (robot_radius + robot_border_size) * np.cos(normal_line_inclination)
+        y_offset = -(robot_radius + robot_border_size) * np.sin(normal_line_inclination)
 
         # This will be the new centre, but we need to induce some sliding
         new_x, new_y = x + x_offset, y + y_offset
 
-        if induce_sliding:
-            # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
-            increase_x = 1 if np.abs(y - new_y) > 0 else 0
-            increase_y = 1 if np.abs(x - new_x) > 0 else 0
-
-            # This is by how much the new centre will slide
-            average_velocity = (self.v_l + self.v_r)/2
-            x_component = average_velocity * np.cos(np.radians(self.theta)) * increase_x
-            y_component = average_velocity * np.sin(np.radians(self.theta)) * increase_y
-
-            x_final = new_x + x_component
-            y_final = new_y + y_component
-
-            return x_final, y_final
-
         return new_x, new_y
 
-    def get_shortest_line_inclination(self, intersection_point):
-        """
-        The shortest line is the one that connects the centre of the robot and an intersection point. This function
-        returns its inclination with respect to the positive x-axis in the clockwise direction
+    def get_normal_vector(self, wall):
 
-        :param intersection_point: SPoint object for the intersection point
-        :return: An angle in RADIANS
-        """
+        x1, y1 = wall.coords[0][0], wall.coords[0][1]
+        x2, y2 = wall.coords[1][0], wall.coords[1][1]
+        print(x1, x2, y1, y2)
+        normal_vector = [-(y1 - y2), x1 - x2]
+        print(normal_vector)
+        return normal_vector / np.linalg.norm(normal_vector)
 
-        # Create a vector going from the centre to the nearest intersection point
-        x1, y1 = self.pos
-        x2, y2 = intersection_point.x, intersection_point.y
-        direction_vector = [x2 - x1, y2 - y1]
+    def get_normal_line_inclination(self, normal_vector):
 
         # This is an indication whether this vector points up or down. Since theta is measured clockwise, a vector
         # pointing up should return a positive angle. A vector pointing down means a negative angle
-        shortest_line_points_up = y2 - y1 > 0
-
+        shortest_line_points_up = normal_vector[1] < 0
+        print(shortest_line_points_up)
         # Normalise the vectors and compute the dot product
         unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
-        unit_vector_2 = direction_vector / np.linalg.norm(direction_vector)
-        dot_product = np.dot(unit_vector_1, unit_vector_2)
+
+        dot_product = np.dot(unit_vector_1, normal_vector)
 
         angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
+        print(np.degrees(angle))
         return angle

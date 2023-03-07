@@ -25,10 +25,15 @@ robot_border_size = 2
 
 walls = [
     # Standard walls
-    LineString([(110, 90), (810, 90)]),
+    LineString([(810, 90), (110, 90)]),
     LineString([(110, 90), (110, 710)]),
     LineString([(110, 710), (810, 710)]),
-    LineString([(810, 710), (810, 90)])
+    LineString([(810, 710), (810, 90)]),
+
+    LineString([(170, 210), (230, 150)]),
+    LineString([(230, 150), (290, 210)]),
+    LineString([(290, 210), (230, 290)]),
+    LineString([(230, 290), (170, 210)])
 
     # Upward slope
     # LineString([(400, 300), (810, 90)])
@@ -56,7 +61,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 2
+velocity_change = 1
 
 
 def run(robot):
