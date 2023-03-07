@@ -22,8 +22,8 @@ robot_start = (450, 400)
 
 if __name__ == '__main__':
 
-    # robot = Robot(1, robot_start, walls, n_sensors=12)
-    # gui.run(robot)
+    robot = Robot(1, robot_start, walls, n_sensors=12)
+    gui.run(robot)
 
-    run_algorithm()
-    animate_evolution()
+    # run_algorithm()
+    # animate_evolution()
