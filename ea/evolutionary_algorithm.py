@@ -13,7 +13,7 @@ from ea.crossover_mutation import choose_pair, one_point_crossover, uniform_cros
 from ea.reproduction import generational_replacement, generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 
-output_directory = "animations/ea_benchmark/diyon/"
+output_directory = "animations/ea_benchmark/"
 genotype_history = []
 population_dictionary = {}
 
