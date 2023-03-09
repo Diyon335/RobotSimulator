@@ -151,7 +151,8 @@ class Robot:
         self.v_l = v_l
         self.v_r = v_r
         self.theta = theta
-        self.room_map = room_map
+        self.room_map = room_map[0]
+        self.dust_map = room_map[1]
         self.sensors = self.generate_sensors(n_sensors)
         self.dust = 0
 
@@ -493,18 +494,11 @@ class Robot:
             minimum_distance, wall = min(circle_distances.keys(), key=lambda t: t[0])
             closest_point = circle_distances[minimum_distance, wall]
 
-            print(circle_distances)
             if len(circle_distances) == 2:
                 walls = [key[1] for key in circle_distances.keys()]
                 wall1, wall2 = walls[0], walls[1]
 
                 wall_intersection = wall1.intersection(wall2)
-
-                print(new_centre.distance(wall_intersection))
-                print(minimum_distance)
-                print(not self.is_orthogonal(wall1, wall2))
-                print(not wall_intersection.is_empty)
-                print((new_centre.distance(wall_intersection) <= minimum_distance))
 
                 if not wall_intersection.is_empty and not self.is_orthogonal(wall1, wall2) and \
                         (new_centre.distance(wall_intersection) <= minimum_distance):
@@ -544,7 +538,8 @@ class Robot:
         """
         Gets the corrected centre position of the robot
 
-        :param normal_line_inclination:
+        :param corner: A boolean indicating whether the correction is being performed for a wall or outward corner
+        :param normal_line_inclination: An angle in degrees
         :param intersection_point: SPoint object indicating the closest intersection point
         intersection point
         :return: A tuple of integers indicating the robot's new centre (x, y)
@@ -552,7 +547,9 @@ class Robot:
 
         x, y = intersection_point.x, intersection_point.y
 
+        # k is a constant to differentiate the offsets from a wall and corner offset
         k = 1 if not corner else -1
+
         # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
         # intersection point
         x_offset = k * (robot_radius + robot_border_size) * np.cos(normal_line_inclination)
@@ -563,30 +560,45 @@ class Robot:
         return new_x, new_y
 
     def get_normal_vector(self, wall):
+        """
+        Gets the normal vector to a wall
 
+        :param wall: A shapely LineString object
+        :return: Returns a normalised normal vector in the form of a list
+        """
         x1, y1 = wall.coords[0][0], wall.coords[0][1]
         x2, y2 = wall.coords[1][0], wall.coords[1][1]
-        #print(x1, x2, y1, y2)
+
         normal_vector = [-(y1 - y2), x1 - x2]
-        print("Normal vector used")
+
         return normal_vector / np.linalg.norm(normal_vector)
 
     def get_normal_line_inclination(self, normal_vector):
+        """
+        Gets the inclination of a normal vector with respect to the horizontal x-increasing axis
 
-        # This is an indication whether this vector points up or down. Since theta is measured clockwise, a vector
-        # pointing up should return a positive angle. A vector pointing down means a negative angle
+        :param normal_vector: A list indicating the increments in the x and y direction
+        :return: Returns an angle in degrees
+        """
+        # This is an indication whether this vector points up or down
         shortest_line_points_up = normal_vector[1] < 0
-        # print(shortest_line_points_up)
-        # Normalise the vectors and compute the dot product
+
+        # Normalise the vector
         unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
 
         dot_product = np.dot(unit_vector_1, normal_vector)
-
         angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
-        # print(np.degrees(angle))
+
         return angle
 
     def is_orthogonal(self, line_1, line_2):
+        """
+        Checks whether two lines are orthogonal
+
+        :param line_1: LineString shapely object
+        :param line_2: LineString shapely object
+        :return: Returns true if two LineString objects are orthogonal, i.e. the angle between them is 90 degrees
+        """
 
         x1, y1 = line_1.coords[0][0], line_1.coords[0][1]
         x2, y2 = line_1.coords[1][0], line_1.coords[1][1]
@@ -607,6 +619,8 @@ class Robot:
         """
         The shortest line is the one that connects the centre of the robot and an intersection point. This function
         returns its inclination with respect to the positive x-axis in the clockwise direction
+
+        :param new_pos: A tuple of the new position of the robot's centre
         :param intersection_point: SPoint object for the intersection point
         :return: An angle in RADIANS
         """
@@ -626,6 +640,6 @@ class Robot:
         dot_product = np.dot(unit_vector_1, unit_vector_2)
 
         angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
-        print("THIS WAS USED:", np.degrees(angle))
+
         return angle
 

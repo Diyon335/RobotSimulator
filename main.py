@@ -10,8 +10,8 @@ Florent Didascalou (i6337071)
 import matplotlib.pyplot as plt
 
 from robot_simulator import gui
-from robot_simulator.gui import walls
 from robot_simulator.robot import Robot
+from robot_simulator.rooms import room_1
 
 from ea.evolutionary_algorithm import run_algorithm, animate_evolution
 
@@ -22,7 +22,7 @@ robot_start = (450, 400)
 
 if __name__ == '__main__':
 
-    robot = Robot(1, robot_start, walls, n_sensors=12)
+    robot = Robot(1, robot_start, room_1, n_sensors=12)
     gui.run(robot)
 
     # run_algorithm()
