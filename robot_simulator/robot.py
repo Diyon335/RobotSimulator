@@ -363,9 +363,7 @@ class Robot:
         return (new_x, new_y), False
 
     def correct_pos2(self, old_pos, new_pos):
-        """
 
-        """
         x, y = old_pos
         lx, ly = x + robot_radius * np.cos(np.radians(self.theta - 90)), \
                  y + robot_radius * np.sin(np.radians(self.theta - 90))
