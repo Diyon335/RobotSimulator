@@ -490,6 +490,7 @@ class Robot:
         if len(circle_distances) > 0:
 
             minimum_distance, wall = min(circle_distances.keys(), key=lambda t: t[0])
+            closest_point = circle_distances[minimum_distance, wall]
 
             print(circle_distances)
             if len(circle_distances) == 2:
@@ -511,7 +512,6 @@ class Robot:
 
                     return self.get_corrected_xy(wall_intersection, short_line_inclination, corner=True), False
 
-            closest_point = circle_distances[minimum_distance, wall]
             normal_line = self.get_normal_vector(wall)
             normal_line_inclination = self.get_normal_line_inclination(normal_line)
 
@@ -554,8 +554,8 @@ class Robot:
         k = 1 if not corner else -1
         # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
         # intersection point
-        x_offset = k * robot_radius * np.cos(normal_line_inclination)
-        y_offset = -robot_radius * np.sin(normal_line_inclination)
+        x_offset = k * (robot_radius + robot_border_size) * np.cos(normal_line_inclination)
+        y_offset = -(robot_radius + robot_border_size) * np.sin(normal_line_inclination)
 
         new_x, new_y = x + x_offset, y + y_offset
 
@@ -614,7 +614,6 @@ class Robot:
         x1, y1 = new_pos
         x2, y2 = intersection_point.x, intersection_point.y
         direction_vector = [x2 - x1, y2 - y1]
-
 
         # This is an indication whether this vector points up or down. Since theta is measured clockwise, a vector
         # pointing up should return a positive angle. A vector pointing down means a negative angle
