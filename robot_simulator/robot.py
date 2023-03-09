@@ -152,7 +152,6 @@ class Robot:
         self.v_r = v_r
         self.theta = theta
         self.room_map = room_map[0]
-        self.dust_map = room_map[1]
         self.sensors = self.generate_sensors(n_sensors)
         self.dust = 0
 
@@ -363,6 +362,31 @@ class Robot:
         return (new_x, new_y), False
 
     def correct_pos2(self, old_pos, new_pos):
+        """
+        A robot's new position is correct if there is a collision between walls of the room
+
+        If there is no collision, the new position is just returned
+
+        There are three types of collisions:
+
+        1) Circle to wall collisions: The circle colliding with a wall is resolved by positioning the robot's centre a
+        radius' distance away from the point of intersection along the normal to the wall. If the circle collides with
+        an outward pointing corner, the robot is placed a radius' distance away from the intersection point of the two
+        walls in the direction of the shortest line connecting the intersection point and the robot's centre
+
+        2) Line (connecting the two centres) to wall collision: If the speed of the robot is too high, then it will pass
+        through a wall entirely. Therefore, a line is drawn from the robot's centre from its old position to its new
+        position. The point where this line intersects the closest wall is the intersection point. The robot is then
+        placed a radius' distance away from the intersection point along the normal line to the wall
+
+        3) Border lines to wall collision: These lines are those that connect the robot's right and left most points
+        on the circle. The same method of resolution as described in (2) is applied here
+
+        :param old_pos: Tuple of the robot's old position
+        :param new_pos: Tuple of the robot's new position
+        :return: A tuple containing the (resolved) position of the robot and a Boolean indicating if its (resolved)
+        position is legal
+        """
 
         x, y = old_pos
         lx, ly = x + robot_radius * np.cos(np.radians(self.theta - 90)), \
