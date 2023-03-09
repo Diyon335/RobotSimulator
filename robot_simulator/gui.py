@@ -147,6 +147,14 @@ def run(robot):
         # Draw velocity rectangles
         font = pygame.font.Font(None, 20)
 
+        dust_text = font.render(str(robot.dust), True, "#FF0000")
+        dust_rectangle = dust_text.get_rect()
+        dust_rectangle.center = (
+            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 180)),
+            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 180))
+        )
+        window_surface.blit(dust_text, dust_rectangle)
+
         v_l_text = font.render(str(robot.v_l), True, "#000000")
         v_r_text = font.render(str(robot.v_r), True, "#000000")
 

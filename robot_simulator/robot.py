@@ -153,6 +153,7 @@ class Robot:
         self.theta = theta
         self.room_map = room_map
         self.sensors = self.generate_sensors(n_sensors)
+        self.dust = 0
 
     def set_pos(self, x, y):
         if x is None or y is None:
