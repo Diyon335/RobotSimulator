@@ -143,7 +143,7 @@ class Robot:
                         distances_list.append(starting_point.distance(intersection_points.geoms[i]))
 
             # Return the sensor's max range if there are no intersections, else return the min distance
-            return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size
+            return self.sensor_range if len(distances_list) < 1 else min(distances_list) - robot_radius + robot_border_size - 2
 
     def __init__(self, robot_id, pos, room_map, v_r=0, v_l=0, theta=90, n_sensors=12):
         self.robot_id = robot_id
@@ -151,8 +151,10 @@ class Robot:
         self.v_l = v_l
         self.v_r = v_r
         self.theta = theta
-        self.room_map = room_map
+        self.room_map = room_map[0]
+        self.dust_map = room_map[1]
         self.sensors = self.generate_sensors(n_sensors)
+        self.dust = 0
 
     def set_pos(self, x, y):
         if x is None or y is None:
@@ -182,10 +184,10 @@ class Robot:
         return [self.Sensor(200, angle, self) for angle in range(0, 360, int(360 / n_sensors))]
 
     def update_position(self):
-        # Function to update the Robot position based on current position,
-        # wheel velocities and environment
-
-        # Remember that in the edge case: we have to recursively update position
+        """
+        Updates the position of the robot. It applies a recursive check to correct the robot's position
+        :return:
+        """
         old_pos = self.pos
 
         # Get new prospective position
@@ -193,13 +195,15 @@ class Robot:
         new_theta = new_pos_orient[2]
         new_pos = (new_pos_orient[0], new_pos_orient[1])
 
-        # Recursive check for legal position
+        i = 0
         legal = False
         while not legal:
-
-            # new_pos, legal = self.correct_pos(new_pos)
             new_pos, legal = self.correct_pos2(old_pos, new_pos)
-            # new_pos, legal = self.correct_pos_shapely(new_pos)
+
+            if i > 5:
+                break
+
+            i += 1
 
         # Set new position and orientation
         self.pos = new_pos
@@ -359,198 +363,268 @@ class Robot:
         return (new_x, new_y), False
 
     def correct_pos2(self, old_pos, new_pos):
-        """
-        Corrects the new centre of the robot the following way:
 
-        First we check for circle intersections. If there's an intersection with one wall, there will be two points
-        of contact. The mid point, m, of these two points of contact is the point that is the shortest distance away
-        from the centre of the robot. Let the line that joins the centre of the robot and m, be called l. Let angle
-        of inclination of l wrt to the positive x-axis be called alpha. The amount that the robot must slide in the
-        direction is moves is a constant component/fraction of its radius. In this case, the constant is set to 2.
+        x, y = old_pos
+        lx, ly = x + robot_radius * np.cos(np.radians(self.theta - 90)), \
+                 y + robot_radius * np.sin(np.radians(self.theta - 90))
 
-        Therefore the final corrected position of the robot will be:
+        rx, ry = x + robot_radius * np.cos(np.radians(self.theta + 90)), \
+                 y + robot_radius * np.sin(np.radians(self.theta + 90))
 
-        new_pos = new_pos + pos_offset + sliding_component
+        x_new, y_new = new_pos
+        lx_new, ly_new = x_new + robot_radius * np.cos(np.radians(self.theta - 90)), \
+                         y_new + robot_radius * np.sin(np.radians(self.theta - 90))
 
-        Where the offsets are given by:
-
-        x_offset = -R * np.cos(alpha)
-        y_offset = -R * np.sin(alpha)
-
-        And the sliding components are:
-
-        x_slide = average_velocity * np.cos(theta)
-        y_slide = average_velocity * np.sin(theta)
-
-        If the circle intersects two walls (a corner where the robot is trapped within), it will take the average
-        of the two suggested positions
-
-        In the case that the robot fully crosses a wall, a line is drawn between the centres of the two positions of the
-        robot. The above equations apply the same way where m is the point of intersection where l2 meets the closest
-        wall
-
-        :param old_pos: Tuple indicating old position
-        :param new_pos: Tuple indicating new position
-        :return: Tuple with corrected position
-        """
+        rx_new, ry_new = x_new + robot_radius * np.cos(np.radians(self.theta + 90)), \
+                         y_new + robot_radius * np.sin(np.radians(self.theta + 90))
 
         old_centre = SPoint(old_pos)
         new_centre = SPoint(new_pos)
         robot_circle = new_centre.buffer(robot_radius).boundary
 
+        old_left = SPoint((lx, ly))
+        old_right = SPoint((rx, ry))
+
+        new_left = SPoint((lx_new, ly_new))
+        new_right = SPoint((rx_new, ry_new))
+
+        left_line = LineString([old_left, new_left])
+        right_line = LineString([old_right, new_right])
         travelled_path = LineString([old_pos, new_pos])
 
         circle_distances = {}
         line_distances = {}
+        left_right_line_distances = {}
 
         for wall in self.room_map:
             circle_intersection_points = robot_circle.intersection(wall)
             line_intersection_points = travelled_path.intersection(wall)
 
+            left_line_intersection_points = left_line.intersection(wall)
+            right_line_intersection_points = right_line.intersection(wall)
+
             # Do a preliminary check to see if there are any intersections first, to avoid useless calculations
-            if circle_intersection_points.is_empty and line_intersection_points.is_empty:
-                print(f"NO intersections")
+            if circle_intersection_points.is_empty and line_intersection_points.is_empty \
+                    and left_line_intersection_points.is_empty and right_line_intersection_points.is_empty:
+
                 continue
 
-            # Does the circle intersect at two points on the same wall? --> midpoint
-            if type(circle_intersection_points) is MultiPoint:
+            if not circle_intersection_points.is_empty:
+                # print("this happened")
+                # Does the circle intersect at two points on the same wall? --> midpoint
+                if type(circle_intersection_points) is MultiPoint:
 
-                if len(circle_intersection_points.geoms) == 2:
-                    print(f"Two intersections, so finding midpoint")
-                    p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
-                    p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
+                    if len(circle_intersection_points.geoms) == 2:
+                        p1 = SPoint((circle_intersection_points.geoms[0].x, circle_intersection_points.geoms[0].y))
+                        p2 = SPoint((circle_intersection_points.geoms[1].x, circle_intersection_points.geoms[1].y))
 
-                    mid_x = (p1.x + p2.x)/2
-                    mid_y = (p1.y + p2.y)/2
+                        mid_x = (p1.x + p2.x)/2
+                        mid_y = (p1.y + p2.y)/2
 
-                    mid_point = SPoint((mid_x, mid_y))
-                    distance_to_point = new_centre.distance(mid_point)
-                    circle_distances[distance_to_point] = mid_point, wall
+                        mid_point = SPoint((mid_x, mid_y))
+                        distance_to_point = old_centre.distance(mid_point)
+                        circle_distances[(distance_to_point, wall)] = mid_point
+
+                        # This info is enough to correct the position
+                        continue
+
+                # Does the circle intersect just one point on the wall? Add it as a single point
+                if type(circle_intersection_points) == SPoint:
+
+                    distance_to_point = old_centre.distance(circle_intersection_points)
+                    circle_distances[(distance_to_point, wall)] = circle_intersection_points
 
                     # This info is enough to correct the position
                     continue
 
-            # Does the circle intersect just one point on the wall? Add it as a single point
-            if type(circle_intersection_points) == SPoint:
-                print(f"One intersection with circle")
-                distance_to_point = new_centre.distance(circle_intersection_points)
-                circle_distances[distance_to_point] = circle_intersection_points, wall
-
-                # This info is enough to correct the position
-                continue
-
             # If no circle intersections, there could be line intersections
-            if line_intersection_points.is_empty:
-                continue
+            if not line_intersection_points.is_empty:
 
-            # If a single point
-            if type(line_intersection_points) == SPoint:
-                print(f"One line intersection")
-                distance_to_point = old_centre.distance(line_intersection_points)
-                line_distances[distance_to_point] = line_intersection_points, wall
+                # If a single point
+                if type(line_intersection_points) == SPoint:
 
-            # If multiple points - very rare case
-            if type(line_intersection_points) == MultiPoint:
+                    distance_to_point = old_centre.distance(line_intersection_points)
+                    line_distances[(distance_to_point, wall)] = line_intersection_points
 
-                for i in range(len(line_intersection_points.geoms)):
+                # If multiple points - very rare case
+                if type(line_intersection_points) == MultiPoint:
 
-                    distance_to_point = old_centre.distance(line_intersection_points.geoms[i])
-                    line_distances[distance_to_point] = line_intersection_points.geoms[i], wall
+                    for i in range(len(line_intersection_points.geoms)):
+
+                        distance_to_point = old_centre.distance(line_intersection_points.geoms[i])
+                        line_distances[(distance_to_point, wall)] = line_intersection_points.geoms[i]
+
+            if not left_line_intersection_points.is_empty:
+
+                # If a single point
+                if type(left_line_intersection_points) == SPoint:
+                    distance_to_point = old_centre.distance(left_line_intersection_points)
+                    left_right_line_distances[(distance_to_point, wall)] = left_line_intersection_points
+
+                # If multiple points - very rare case
+                if type(left_line_intersection_points) == MultiPoint:
+
+                    for i in range(len(left_line_intersection_points.geoms)):
+                        distance_to_point = old_centre.distance(left_line_intersection_points.geoms[i])
+                        left_right_line_distances[(distance_to_point, wall)] = left_line_intersection_points.geoms[i]
+
+            if not right_line_intersection_points.is_empty:
+
+                # If a single point
+                if type(right_line_intersection_points) == SPoint:
+                    distance_to_point = old_centre.distance(right_line_intersection_points)
+                    left_right_line_distances[(distance_to_point, wall)] = right_line_intersection_points
+
+                # If multiple points - very rare case
+                if type(right_line_intersection_points) == MultiPoint:
+
+                    for i in range(len(right_line_intersection_points.geoms)):
+                        distance_to_point = old_centre.distance(right_line_intersection_points.geoms[i])
+                        left_right_line_distances[(distance_to_point, wall)] = right_line_intersection_points.geoms[i]
 
         # If no intersections with all walls, just return new pos
-        if len(circle_distances) < 1 and len(line_distances) < 1:
+        if len(circle_distances) < 1 and len(line_distances) < 1 and len(left_right_line_distances) < 1:
             return new_pos, True
 
-        # First check circle possible circle intersections
+        # Circle intersections
         if len(circle_distances) > 0:
 
-            distances = list(circle_distances.keys())
+            minimum_distance, wall = min(circle_distances.keys(), key=lambda t: t[0])
+            closest_point = circle_distances[minimum_distance, wall]
 
-            if len(distances) == 1:
-                print(f"Just a wall")
-                minimum_distance = min(circle_distances.keys())
-                closest_point, wall = circle_distances[minimum_distance]
+            if len(circle_distances) == 2:
+                walls = [key[1] for key in circle_distances.keys()]
+                wall1, wall2 = walls[0], walls[1]
 
-                shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+                wall_intersection = wall1.intersection(wall2)
 
-                return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+                if not wall_intersection.is_empty and not self.is_orthogonal(wall1, wall2) and \
+                        (new_centre.distance(wall_intersection) <= minimum_distance):
 
-            # If it collides with two or more walls, we want the two closest walls
-            if len(distances) > 1:
-                print(f"Corner")
-                distances.sort()
-                p1, wall1 = circle_distances[distances[0]]
-                p2, wall2 = circle_distances[distances[1]]
+                    short_line_inclination = self.get_shortest_line_inclination(wall_intersection, new_pos)
 
-                points = [p1, p2]
-                x, y = [], []
+                    return self.get_corrected_xy(wall_intersection, short_line_inclination, corner=True), False
 
-                # The new position will be the average of both walls' corrections
-                for point in points:
-                    shortest_line_inclination = self.get_shortest_line_inclination(point)
-                    est_x, est_y = self.get_corrected_xy(point, shortest_line_inclination, induce_sliding=False)
-                    x.append(est_x)
-                    y.append(est_y)
+            normal_line = self.get_normal_vector(wall)
+            normal_line_inclination = self.get_normal_line_inclination(normal_line)
 
-                return (np.mean(x), np.mean(y)), True
+            return self.get_corrected_xy(closest_point, normal_line_inclination), False
 
-        # The only remaining case is line intersections
-        minimum_distance = min(line_distances.keys())
-        closest_point, wall = line_distances[minimum_distance]
+        # Border intersections
+        if len(left_right_line_distances) > 0:
 
-        shortest_line_inclination = self.get_shortest_line_inclination(closest_point)
+            minimum_distance, wall = min(left_right_line_distances.keys(), key=lambda t: t[0])
+            closest_point = left_right_line_distances[minimum_distance, wall]
 
-        return self.get_corrected_xy(closest_point, shortest_line_inclination), True
+            normal_line = self.get_normal_vector(wall)
+            normal_line_inclination = self.get_normal_line_inclination(normal_line)
 
-    def get_corrected_xy(self, intersection_point, shortest_line_inclination, induce_sliding=True):
+            return self.get_corrected_xy(closest_point, normal_line_inclination), False
+
+        # Line intersections
+        if len(line_distances) > 0:
+
+            minimum_distance, wall = min(line_distances.keys(), key=lambda t: t[0])
+            closest_point = line_distances[minimum_distance, wall]
+
+            normal_line = self.get_normal_vector(wall)
+            normal_line_inclination = self.get_normal_line_inclination(normal_line)
+
+            return self.get_corrected_xy(closest_point, normal_line_inclination), False
+
+    def get_corrected_xy(self, intersection_point, normal_line_inclination, corner=False):
         """
         Gets the corrected centre position of the robot
 
-        :param induce_sliding: A boolean indicating whether the robot should slide
+        :param corner: A boolean indicating whether the correction is being performed for a wall or outward corner
+        :param normal_line_inclination: An angle in degrees
         :param intersection_point: SPoint object indicating the closest intersection point
-        :param shortest_line_inclination: The inclination of the line connecting the robot's centre to the
         intersection point
         :return: A tuple of integers indicating the robot's new centre (x, y)
         """
 
         x, y = intersection_point.x, intersection_point.y
 
+        # k is a constant to differentiate the offsets from a wall and corner offset
+        k = 1 if not corner else -1
+
         # Here we calculate the offset of intersection point, so that the new centre lies a radius away from the
         # intersection point
-        x_offset = -(robot_radius + robot_border_size) * np.cos(shortest_line_inclination)
-        y_offset = -(robot_radius + robot_border_size) * np.sin(shortest_line_inclination)
+        x_offset = k * (robot_radius + robot_border_size) * np.cos(normal_line_inclination)
+        y_offset = -(robot_radius + robot_border_size) * np.sin(normal_line_inclination)
 
-        # This will be the new centre, but we need to induce some sliding
         new_x, new_y = x + x_offset, y + y_offset
-
-        if induce_sliding:
-            # This determines whether we should slide in the direction of x and/or y. 1 = yes, 0 = no
-            increase_x = 1 if np.abs(y - new_y) > 0 else 0
-            increase_y = 1 if np.abs(x - new_x) > 0 else 0
-
-            # This is by how much the new centre will slide
-            average_velocity = (self.v_l + self.v_r)/2
-            x_component = average_velocity * np.cos(np.radians(self.theta)) * increase_x
-            y_component = average_velocity * np.sin(np.radians(self.theta)) * increase_y
-
-            x_final = new_x + x_component
-            y_final = new_y + y_component
-
-            return x_final, y_final
 
         return new_x, new_y
 
-    def get_shortest_line_inclination(self, intersection_point):
+    def get_normal_vector(self, wall):
+        """
+        Gets the normal vector to a wall
+
+        :param wall: A shapely LineString object
+        :return: Returns a normalised normal vector in the form of a list
+        """
+        x1, y1 = wall.coords[0][0], wall.coords[0][1]
+        x2, y2 = wall.coords[1][0], wall.coords[1][1]
+
+        normal_vector = [-(y1 - y2), x1 - x2]
+
+        return normal_vector / np.linalg.norm(normal_vector)
+
+    def get_normal_line_inclination(self, normal_vector):
+        """
+        Gets the inclination of a normal vector with respect to the horizontal x-increasing axis
+
+        :param normal_vector: A list indicating the increments in the x and y direction
+        :return: Returns an angle in degrees
+        """
+        # This is an indication whether this vector points up or down
+        shortest_line_points_up = normal_vector[1] < 0
+
+        # Normalise the vector
+        unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
+
+        dot_product = np.dot(unit_vector_1, normal_vector)
+        angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
+
+        return angle
+
+    def is_orthogonal(self, line_1, line_2):
+        """
+        Checks whether two lines are orthogonal
+
+        :param line_1: LineString shapely object
+        :param line_2: LineString shapely object
+        :return: Returns true if two LineString objects are orthogonal, i.e. the angle between them is 90 degrees
+        """
+
+        x1, y1 = line_1.coords[0][0], line_1.coords[0][1]
+        x2, y2 = line_1.coords[1][0], line_1.coords[1][1]
+
+        x1_, y1_ = line_2.coords[0][0], line_2.coords[0][1]
+        x2_, y2_ = line_2.coords[1][0], line_2.coords[1][1]
+
+        vector_1 = [x1 - x2, y1 - y2]
+        vector_2 = [x1_ - x2_, y1_ - y2_]
+        unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
+        unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
+
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+
+        return np.abs(np.degrees(np.arccos(dot_product))) == 90
+
+    def get_shortest_line_inclination(self, intersection_point, new_pos):
         """
         The shortest line is the one that connects the centre of the robot and an intersection point. This function
         returns its inclination with respect to the positive x-axis in the clockwise direction
 
+        :param new_pos: A tuple of the new position of the robot's centre
         :param intersection_point: SPoint object for the intersection point
         :return: An angle in RADIANS
         """
 
         # Create a vector going from the centre to the nearest intersection point
-        x1, y1 = self.pos
+        x1, y1 = new_pos
         x2, y2 = intersection_point.x, intersection_point.y
         direction_vector = [x2 - x1, y2 - y1]
 
@@ -564,4 +638,6 @@ class Robot:
         dot_product = np.dot(unit_vector_1, unit_vector_2)
 
         angle = np.arccos(dot_product) if shortest_line_points_up else -np.arccos(dot_product)
+
         return angle
+

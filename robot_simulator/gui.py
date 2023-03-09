@@ -8,46 +8,20 @@ Luca Forte (I6330944)
 Olmo Denegri (i6333396)
 Florent Didascalou (i6337071)
 """
-
-
 import math
-
 import pygame
-from shapely.geometry import LineString
+from robot_simulator.rooms import room_1
+from shapely.geometry import Point
 
 is_running = True
 window_size = (900, 800)
+walls = room_1[0]
+dust = room_1[1]
 
 robot_radius = 52
 
 # Do not change. This is the width (in pixels) of the robot's outline
 robot_border_size = 2
-
-walls = [
-    # Standard walls
-    LineString([(110, 90), (810, 90)]),
-    LineString([(110, 90), (110, 710)]),
-    LineString([(110, 710), (810, 710)]),
-    LineString([(810, 710), (810, 90)])
-
-    # Upward slope
-    # LineString([(400, 300), (810, 90)])
-
-    # Downward slope
-    # LineString([(400, 300),(0, 0)])
-
-    # Outward corner
-    # LineString([(450, 600), (200, 710)]),
-    # LineString([(450, 600), (600, 710)])
-
-    # Outward corner
-    # LineString([(450, 600), (200, 600)]),
-    # LineString([(450, 600), (450, 800)])
-
-    # Narrow corner
-    # LineString([(450, 600), (150, 90)]),
-    # LineString([(450, 600), (600, 90)])
-]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
 velocity_display_distance = 20
@@ -56,7 +30,7 @@ velocity_display_distance = 20
 sensor_display_distance = 70
 
 # By how much should the velocity of the wheels increase/decrease
-velocity_change = 2
+velocity_change = 1
 
 
 def run(robot):
@@ -79,6 +53,7 @@ def run(robot):
 
     clock = pygame.time.Clock()
 
+    global dust
     global is_running
     while is_running:
 
@@ -87,6 +62,9 @@ def run(robot):
 
             if event.type == pygame.QUIT:
                 is_running = False
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(pygame.mouse.get_pos())
 
             if event.type == pygame.KEYDOWN:
 
@@ -122,6 +100,7 @@ def run(robot):
                     robot.v_r -= velocity_change
 
         robot.update_position()
+        robot_centre = Point(robot.pos)
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
@@ -139,9 +118,35 @@ def run(robot):
         for wall in walls:
             pygame.draw.line(window_surface, "#000000", wall.coords[0], wall.coords[1], width=2)
 
-        # Draw velocity rectangles
         font = pygame.font.Font(None, 20)
 
+        # Plot the dust particles. If the dust particle lies within the circle, i.e. the dust particle's centre
+        # is within the radius of the robot, it is collected by the robot and not plotted
+        to_remove = []
+        for particle in dust:
+            x, y = particle.x, particle.y
+            particle_pos = Point((x, y))
+
+            if robot_centre.distance(particle_pos) <= robot_radius:
+                to_remove.append(particle)
+            else:
+                pygame.draw.circle(window_surface, "#FF0000", (particle.x, particle.y), 5)
+
+        for particle in to_remove:
+            dust.remove(particle)
+
+        robot.dust += len(to_remove)
+
+        # Plot the dust particle counter
+        dust_text = font.render(str(robot.dust), True, "#FF0000")
+        dust_rectangle = dust_text.get_rect()
+        dust_rectangle.center = (
+            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 180)),
+            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 180))
+        )
+        window_surface.blit(dust_text, dust_rectangle)
+
+        # Plot the wheel velocities
         v_l_text = font.render(str(robot.v_l), True, "#000000")
         v_r_text = font.render(str(robot.v_r), True, "#000000")
 
