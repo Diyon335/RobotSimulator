@@ -1,9 +1,10 @@
 import random
 import numpy as np
-
+output = [0,0]
 class Ann:
 
     '''Neural network class. Each robot will have his own neural network instance.'''
+
 
 
     def __init__(self, layers, weights):
@@ -28,8 +29,8 @@ class Ann:
         '''
         weights_lists = []
         i = 0
-        weights_lists.append(self.weigths[:self.layers[0] * self.layers[0]])
-        self.weigths = self.weigths[self.layers[0] * self.layers[0]:]
+        weights_lists.append(self.weigths[:self.layers[0] * self.layers[0] + self.layers[0] * len(output)])
+        self.weigths = self.weigths[self.layers[0] * self.layers[0] + self.layers[0] * len(output):]
         while i < len(self.layers) - 1:
             weights_lists.append(self.weigths[:self.layers[i] * self.layers[i + 1]])
             self.weigths = self.weigths[self.layers[i] * self.layers[i + 1]:]
@@ -48,7 +49,8 @@ class Ann:
 
         weights_array = np.array(weights_list)
         weights_array = np.split(weights_array, n)
-        return weights_array
+        matrix_weights = np.array(weights_array)
+        return matrix_weights
 
     def relu(self, Z):
 
@@ -59,8 +61,13 @@ class Ann:
         '''
         return np.maximum(0, Z)
 
-    def feedforward(self,input, weights_lists):
+    def feedforward(self, input, weights_lists, l=[]):
 
+        global output
+        real_input = input + output
+        matrix = [real_input]
+        for i in range (0, self.layers[0] - 1):
+            matrix.append(real_input)
         '''
         Feedforward routine implementation
         :param weights_lists: All the lists of weights previously computed
@@ -68,10 +75,11 @@ class Ann:
         '''
         i = 1
         weights = self.split_list(weights_lists[0], self.layers[0])
-        layer = self.relu(np.dot(weights, input))
+        layer = self.relu(np.dot(matrix, weights.transpose()))
         while i < len(self.layers):
             weights = self.split_list(weights_lists[i], self.layers[i])
-            layer = self.relu(np.dot(weights, layer))
+            layer = self.relu(np.dot(layer, weights.transpose()))
             i += 1
-        print(layer)
+        output = [layer[0][0], layer[0][1]]
+        print(output)
         return layer
