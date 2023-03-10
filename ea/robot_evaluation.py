@@ -9,6 +9,7 @@ itterations = 1000
 ann_structure = [16, 2]
 walls = room_1[0]
 dust = room_1[1]
+total_dust = len(dust)
 
 initial_pos = (40,40)
 robot_radius = 52
@@ -19,6 +20,7 @@ def evaluate_genotype(genotype):
     brain = Ann(ann_structure, genotype)
     body = Robot(genotype, initial_pos, walls, n_sensors=12)
     weight_lists = brain.create_weights_lists()
+    collision_counter = 0
 
     for i in range(itterations):
         sensor_data = [sensor.sense_distance2 for sensor in body.sensors]
@@ -30,6 +32,9 @@ def evaluate_genotype(genotype):
         
         body.update_position()
         robot_centre = Point(body.pos)
+
+        if min(sensor_data) < 3:
+            collision_counter += 1
         
         to_remove = []
         for particle in dust:
@@ -46,4 +51,4 @@ def evaluate_genotype(genotype):
         body.dust += len(to_remove)
     
 
-    return None
+    return (body.dust / total_dust) - collision_counter
