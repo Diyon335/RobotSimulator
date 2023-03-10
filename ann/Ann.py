@@ -6,7 +6,7 @@ class Ann:
     '''Neural network class. Each robot will have his own neural network instance.'''
 
 
-    def __init__(self, input, layers, weights):
+    def __init__(self, layers, weights):
 
         '''
         :param input: The input values from sensors.
@@ -28,6 +28,8 @@ class Ann:
         '''
         weights_lists = []
         i = 0
+        weights_lists.append(self.weigths[:self.layers[0] * self.layers[0]])
+        self.weigths = self.weigths[self.layers[0] * self.layers[0]:]
         while i < len(self.layers) - 1:
             weights_lists.append(self.weigths[:self.layers[i] * self.layers[i + 1]])
             self.weigths = self.weigths[self.layers[i] * self.layers[i + 1]:]
@@ -57,7 +59,7 @@ class Ann:
         '''
         return np.maximum(0, Z)
 
-    def feedforward(self, weights_lists):
+    def feedforward(self,input, weights_lists):
 
         '''
         Feedforward routine implementation
@@ -65,10 +67,11 @@ class Ann:
         :return: The output of the network, which are the two wheel velocities
         '''
         i = 1
-        weights = self.split_list(weights_lists[0], self.layers[1])
-        layer = self.relu(np.dot(weights, self.input))
-        while i < len(self.layers) - 1:
-            weights = self.split_list(weights_lists[i], self.layers[i + 1])
+        weights = self.split_list(weights_lists[0], self.layers[0])
+        layer = self.relu(np.dot(weights, input))
+        while i < len(self.layers):
+            weights = self.split_list(weights_lists[i], self.layers[i])
             layer = self.relu(np.dot(weights, layer))
             i += 1
         print(layer)
+        return layer
