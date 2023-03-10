@@ -82,4 +82,4 @@ class Ann:
             i += 1
         output = [layer[0][0], layer[0][1]]
         print(output)
-        return layer
+        return output
