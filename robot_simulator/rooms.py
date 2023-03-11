@@ -97,9 +97,11 @@ for i in range(860):
 for i in range(780):
     dust_2[i] = zero_rows if i < 21 else row
 
-print(dust_2)
+
 room_1 = [walls_1, dust_1]
 
+total_dust_2 = sum([sum(row) for row in dust_2])
+room_2 = [walls_2, dust_2, total_dust_2]
 
 def generate_random_dust(amount_of_dust):
 
@@ -109,6 +111,6 @@ def generate_random_dust(amount_of_dust):
 
 if __name__ == '__main__':
     #generate_random_dust(50)
-    print(dust_2)
+    #print(dust_2)
     print(len(dust_2))
-    print(len(dust_2[0]))
+    #print(len(dust_2[0]))
