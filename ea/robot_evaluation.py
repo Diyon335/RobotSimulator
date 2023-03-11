@@ -16,12 +16,13 @@ total_dust = len(dust)
 
 initial_pos = (40,40)
 robot_radius = 52
+max_vel = 40
 
 delta_t = 20
 
 def evaluate_genotype(genotype):
     brain = Ann(ann_structure, genotype)
-    body = Robot(genotype, initial_pos, walls, n_sensors=12)
+    body = Robot(genotype, initial_pos, room_1, n_sensors=12)
     weight_lists = brain.create_weights_lists()
     collision_counter = 0
 
@@ -29,8 +30,8 @@ def evaluate_genotype(genotype):
         sensor_data = [sensor.sense_distance2 for sensor in body.sensors]
         if i % delta_t == 0:
             vel = brain.feedforward(sensor_data, weight_lists)
-            body.set_vel_left(vel[0])
-            body.set_vel_right(vel[1])
+            body.set_vel_left(min(vel[0], max_vel))
+            body.set_vel_right(min(vel[1], max_vel))
         
         
         body.update_position()
