@@ -68,6 +68,6 @@ def evaluate_genotype(genotype, ind):
 
     print(time.time()-start)
     # print(c)
-    print("done iteration")
+    print("done evaluation")
 
     return (body.dust / total_dust) - sigmoid(collision_counter)
