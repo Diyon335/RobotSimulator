@@ -1,9 +1,12 @@
-from robot_simulator.robot import Robot
-from ann.Ann import Ann
 from shapely import Point, LineString
+import numpy as np
 
-
+from robot_simulator.robot import Robot
 from robot_simulator.rooms import room_1
+from ann.Ann import Ann
+
+
+sigmoid_stretch = 0.5
 
 itterations = 1000
 ann_structure = [16, 2]
@@ -51,4 +54,7 @@ def evaluate_genotype(genotype):
         body.dust += len(to_remove)
     
 
-    return (body.dust / total_dust) - collision_counter
+    return (body.dust / total_dust) - sigmoid(collision_counter)
+
+def sigmoid(x):
+    return (2  / (1 + np.exp(- sigmoid_stretch * x))) - 1
