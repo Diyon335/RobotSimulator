@@ -63,7 +63,7 @@ def evaluate_genotype(genotype, ind):
         # for particle in to_remove:
         #     dust.remove(particle)
 
-        body.dust += removed
+        body.dust += len(to_remove)
 
     print(time.time()-start)
     # print(c)
