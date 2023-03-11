@@ -13,6 +13,7 @@ from ea.crossover_mutation import choose_pair, one_point_crossover, uniform_cros
 from ea.reproduction import generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 from ea.robot_evaluation import evaluate_genotype
+from robot_simulator.rooms import room_2
 
 import time
 
@@ -76,7 +77,7 @@ def initialise():
         # x, y = phenotype_computer(genotype)
         # generation.append((x, y))
 
-        population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual)]
+        population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual, room_2)]
 
     # phenotype_history.append(generation)
 
@@ -150,7 +151,7 @@ def run_algorithm():
             # offspring_dictionary[offspring][2] = phenotype_computer(genotype)
 
             # x, y = offspring_dictionary[offspring][2]
-            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring)
+            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring, room_2)
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
