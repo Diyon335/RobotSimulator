@@ -17,7 +17,7 @@ class Ann:
         """
         self.layers = layers
         self.genotype = genotype
-
+        self.prev_output = [0, 0]
         self.weights = self.create_weights_lists()
 
     def create_weights_lists(self):
@@ -29,8 +29,8 @@ class Ann:
         """
         weights_lists = []
         i = 0
-        weights_lists.append(self.genotype[:self.layers[0] * self.layers[0] + self.layers[0] * len(output)])
-        self.weights = self.genotype[self.layers[0] * self.layers[0] + self.layers[0] * len(output):]
+        weights_lists.append(self.genotype[:self.layers[0] * self.layers[0] + self.layers[0] * len(self.prev_output)])
+        self.weights = self.genotype[self.layers[0] * self.layers[0] + self.layers[0] * len(self.prev_output):]
         while i < len(self.layers) - 1:
             weights_lists.append(self.weights[:self.layers[i] * self.layers[i + 1]])
             self.weights = self.weights[self.layers[i] * self.layers[i + 1]:]
@@ -63,8 +63,7 @@ class Ann:
 
     def feedforward(self, sensor_input, weights_lists):
 
-        global output
-        real_input = sensor_input + output
+        real_input = sensor_input + self.prev_output
         """
         Feedforward routine implementation
         :param weights_lists: All the lists of weights previously computed
@@ -77,6 +76,6 @@ class Ann:
             weights = self.split_list(weights_lists[i], self.layers[i])
             layer = self.relu(np.dot(weights, layer))
             i += 1
-        output = [layer[0], layer[1]]
-        return output
+        self.prev_output = [layer[0], layer[1]]
+        return self.prev_output
 
