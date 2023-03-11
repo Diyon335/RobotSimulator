@@ -135,11 +135,11 @@ def run_algorithm():
             elif rng < 66:
                 uniform_crossover(offspring_dictionary, offspring_pair)
             else:
-                arithmetic_crossover(offspring_dictionary, offspring_pair)
+                arithmetic_crossover(offspring_dictionary, offspring_pair, integers=False)
 
         # MUTATION
         for target_offspring in offspring_dictionary:
-            mutation(offspring_dictionary, target_offspring, mutation_rate)
+            mutation(offspring_dictionary, target_offspring, mutation_rate, integers=False)
 
         # REPRODUCTION
         # before offsprings are added into the population, but after they have undergone crossover and mutation events

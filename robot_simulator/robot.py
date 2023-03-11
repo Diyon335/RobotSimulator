@@ -218,6 +218,7 @@ class Robot:
 
         R = l * ((self.v_l + self.v_r) / (self.v_r - self.v_l))
         omega = (self.v_r - self.v_l) / (l*2)
+        print(self.v_r, self.v_l, l)
         x = self.pos[0]
         y = self.pos[1]
 
@@ -228,6 +229,7 @@ class Robot:
         # 3: Calculate new position and orientation of robot and return
         x_new = (np.cos(omega) * (x - ICC_x) - np.sin(omega) * (y - ICC_y)) + ICC_x
         y_new = (np.sin(omega) * (x - ICC_x) + np.cos(omega) * (y - ICC_y)) + ICC_y
+        print(x_new, y_new, omega, ICC_x, ICC_y)
         theta_new = self.theta - np.degrees(omega)
 
         return x_new, y_new, theta_new
@@ -412,6 +414,9 @@ class Robot:
         new_left = SPoint((lx_new, ly_new))
         new_right = SPoint((rx_new, ry_new))
 
+        print([old_left, new_left])
+        print(lx_new, ly_new)
+        print(new_pos)
         left_line = LineString([old_left, new_left])
         right_line = LineString([old_right, new_right])
         travelled_path = LineString([old_pos, new_pos])

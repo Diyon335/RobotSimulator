@@ -82,12 +82,13 @@ def arithmetic_crossover(offspring_dictionary, key_list, integers=True):
         offspring_2[0] = [gene/2 for gene in genotype_sum]
 
 
-def mutation(offspring_dictionary, target_offspring, mutation_rate, mutation_range=5):
+def mutation(offspring_dictionary, target_offspring, mutation_rate, mutation_range=5, integers=False):
     """
     :param offspring_dictionary: The dictionary containing all offsprings
     :param target_offspring: A key in the offspring dictionary indicating the offspring to be mutated
     :param mutation_rate: Chance of ever individual to mutate
     :param mutation_range: by how much can a real-value gene change
+    :param integers: whether genes should be integers or floats
     """
 
     steps = 20*mutation_range
@@ -96,4 +97,7 @@ def mutation(offspring_dictionary, target_offspring, mutation_rate, mutation_ran
     for i in range(len(offspring_dictionary[target_offspring][0])):
         rng = random.randint(0, 99)
         if rng < mutation_rate:
-            offspring_dictionary[target_offspring][0][i] += random.choice(deltas)
+            if integers:
+                offspring_dictionary[target_offspring][0][i] += int(random.choice(deltas))
+            else:
+                offspring_dictionary[target_offspring][0][i] += random.choice(deltas)
