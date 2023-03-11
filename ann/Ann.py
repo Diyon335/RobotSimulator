@@ -1,6 +1,6 @@
 import random
 import numpy as np
-output = [0,0]
+output = [0, 0]
 
 
 class Ann:
@@ -77,7 +77,6 @@ class Ann:
             weights = self.split_list(weights_lists[i], self.layers[i])
             layer = self.relu(np.dot(weights, layer))
             i += 1
-        print("layer is: ", layer)
         output = [layer[0], layer[1]]
         return output
 

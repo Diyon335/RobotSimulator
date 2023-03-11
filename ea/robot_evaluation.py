@@ -9,12 +9,12 @@ from ann.Ann import Ann
 sigmoid_stretch = 0.5
 
 itterations = 1000
-ann_structure = [16, 2]
+ann_structure = [12, 3, 2]
 walls = room_1[0]
 dust = room_1[1]
 total_dust = len(dust)
 
-initial_pos = (40,40)
+initial_pos = (40, 40)
 robot_radius = 52
 max_vel = 40
 
@@ -25,14 +25,14 @@ def sigmoid(x):
     return (2 / (1 + np.exp(- sigmoid_stretch * x))) - 1
 
 
-def evaluate_genotype(genotype):
+def evaluate_genotype(genotype, ind):
     brain = Ann(ann_structure, genotype)
-    body = Robot(genotype, initial_pos, room_1, n_sensors=12)
+    body = Robot(ind, initial_pos, room_1, n_sensors=12)
     # weight_lists = brain.create_weights_lists()
     collision_counter = 0
 
     for i in range(itterations):
-        sensor_data = [sensor.sense_distance2 for sensor in body.sensors]
+        sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
         if i % delta_t == 0:
             vel = brain.feedforward(sensor_data, brain.weights)
             body.set_vel_left(min(vel[0], max_vel))
