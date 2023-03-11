@@ -7,18 +7,18 @@ class Ann:
 
     # Neural network class. Each robot will have its own neural network instance.
 
-    def __init__(self, layers, weights):
+    def __init__(self, layers, genotype):
 
         """
-        :param input: The input values from sensors.
         In this example I use a list with 5 input values since I used 5 neurons in the first layer,
         but we can also use multiple input values for each neuron
         :param layers: The architecture of the network
         :param weights: The weights, which are basically the genotype
         """
-        self.input = input
         self.layers = layers
-        self.weigths = weights
+        self.genotype = genotype
+
+        self.weights = self.create_weights_lists()
 
     def create_weights_lists(self):
 
@@ -29,11 +29,11 @@ class Ann:
         """
         weights_lists = []
         i = 0
-        weights_lists.append(self.weigths[:self.layers[0] * self.layers[0] + self.layers[0] * len(output)])
-        self.weigths = self.weigths[self.layers[0] * self.layers[0] + self.layers[0] * len(output):]
+        weights_lists.append(self.genotype[:self.layers[0] * self.layers[0] + self.layers[0] * len(output)])
+        self.weights = self.genotype[self.layers[0] * self.layers[0] + self.layers[0] * len(output):]
         while i < len(self.layers) - 1:
-            weights_lists.append(self.weigths[:self.layers[i] * self.layers[i + 1]])
-            self.weigths = self.weigths[self.layers[i] * self.layers[i + 1]:]
+            weights_lists.append(self.weights[:self.layers[i] * self.layers[i + 1]])
+            self.weights = self.weights[self.layers[i] * self.layers[i + 1]:]
             i += 1
         return weights_lists
 
@@ -61,13 +61,10 @@ class Ann:
         """
         return np.maximum(0, Z)
 
-    def feedforward(self, input, weights_lists, l=[]):
+    def feedforward(self, sensor_input, weights_lists):
 
         global output
-        real_input = input + output
-        matrix = [real_input]
-        for i in range (0, self.layers[0] - 1):
-            matrix.append(real_input)
+        real_input = sensor_input + output
         """
         Feedforward routine implementation
         :param weights_lists: All the lists of weights previously computed
@@ -75,11 +72,12 @@ class Ann:
         """
         i = 1
         weights = self.split_list(weights_lists[0], self.layers[0])
-        layer = self.relu(np.dot(matrix, weights.transpose()))
+        layer = self.relu(np.dot(weights, real_input))
         while i < len(self.layers):
             weights = self.split_list(weights_lists[i], self.layers[i])
-            layer = self.relu(np.dot(layer, weights.transpose()))
+            layer = self.relu(np.dot(weights, layer))
             i += 1
-        output = [layer[0][0], layer[0][1]]
-        print(output)
+        print("layer is: ", layer)
+        output = [layer[0], layer[1]]
         return output
+

@@ -20,20 +20,24 @@ max_vel = 40
 
 delta_t = 20
 
+
+def sigmoid(x):
+    return (2 / (1 + np.exp(- sigmoid_stretch * x))) - 1
+
+
 def evaluate_genotype(genotype):
     brain = Ann(ann_structure, genotype)
     body = Robot(genotype, initial_pos, room_1, n_sensors=12)
-    weight_lists = brain.create_weights_lists()
+    # weight_lists = brain.create_weights_lists()
     collision_counter = 0
 
     for i in range(itterations):
         sensor_data = [sensor.sense_distance2 for sensor in body.sensors]
         if i % delta_t == 0:
-            vel = brain.feedforward(sensor_data, weight_lists)
+            vel = brain.feedforward(sensor_data, brain.weights)
             body.set_vel_left(min(vel[0], max_vel))
             body.set_vel_right(min(vel[1], max_vel))
-        
-        
+
         body.update_position()
         robot_centre = Point(body.pos)
 
@@ -41,21 +45,17 @@ def evaluate_genotype(genotype):
             collision_counter += 1
         
         to_remove = []
+        global dust
         for particle in dust:
             x, y = particle.x, particle.y
             particle_pos = Point((x, y))
 
             if robot_centre.distance(particle_pos) <= robot_radius:
                 to_remove.append(particle)
-           
 
         for particle in to_remove:
             dust.remove(particle)
 
         body.dust += len(to_remove)
-    
 
     return (body.dust / total_dust) - sigmoid(collision_counter)
-
-def sigmoid(x):
-    return (2  / (1 + np.exp(- sigmoid_stretch * x))) - 1
