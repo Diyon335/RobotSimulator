@@ -16,7 +16,7 @@ walls = room_1[0]
 dust = room_1[1]
 total_dust = len(dust)
 
-initial_pos = (40, 40)
+initial_pos = (450, 400)
 robot_radius = 52
 max_vel = 40
 
@@ -55,10 +55,8 @@ def evaluate_genotype(genotype, ind):
         to_remove = []
         global dust
         for particle in dust:
-            x, y = particle.x, particle.y
-            particle_pos = Point((x, y))
 
-            if robot_centre.distance(particle_pos) <= robot_radius:
+            if robot_centre.distance(particle) <= robot_radius:
                 to_remove.append(particle)
 
         for particle in to_remove:
