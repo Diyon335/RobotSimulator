@@ -3,6 +3,7 @@ import numpy as np
 
 from robot_simulator.robot import Robot
 from robot_simulator.rooms import room_1
+from robot_simulator.gui import robot_radius
 from ann.Ann import Ann
 
 import time
@@ -59,10 +60,14 @@ def evaluate_genotype(genotype, ind):
             if robot_centre.distance(particle) <= robot_radius:
                 to_remove.append(particle)
 
-        for particle in to_remove:
-            dust.remove(particle)
+        # for particle in to_remove:
+        #     dust.remove(particle)
 
-        body.dust += len(to_remove)
+        body.dust += removed
+
+    print(time.time()-start)
+    # print(c)
+    print("done evaluation")
 
     print(time.time()-start)
     # print(c)

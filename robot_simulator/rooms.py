@@ -31,6 +31,13 @@ walls_1 = [
 
 ]
 
+walls_2 = [
+    LineString([(860, 20), (15, 20)]),
+    LineString([(15, 20), (15, 780)]),
+    LineString([(15, 780), (860, 780)]),
+    LineString([(860, 780), (860, 20)]),
+]
+
 dust_1 = [
     Point((226, 330)),
     Point((620, 51)),
@@ -80,6 +87,17 @@ dust_1 = [
     Point((421, 179)),
 ]
 
+dust_2 = [None for i in range(780)]
+
+zero_rows = [0 for i in range(860)]
+row = [0 for i in range(860)]
+for i in range(860):
+    row[i] = 1 if i > 15 and i % 5 == 0 else 0
+
+for i in range(780):
+    dust_2[i] = zero_rows if i < 21 else row
+
+print(dust_2)
 room_1 = [walls_1, dust_1]
 
 
@@ -90,4 +108,7 @@ def generate_random_dust(amount_of_dust):
 
 
 if __name__ == '__main__':
-    generate_random_dust(50)
+    #generate_random_dust(50)
+    print(dust_2)
+    print(len(dust_2))
+    print(len(dust_2[0]))
