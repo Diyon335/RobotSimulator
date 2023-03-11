@@ -150,7 +150,7 @@ def run_algorithm():
             # offspring_dictionary[offspring][2] = phenotype_computer(genotype)
 
             # x, y = offspring_dictionary[offspring][2]
-            offspring_dictionary[offspring][1] = evaluate_genotype(genotype)
+            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring)
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 

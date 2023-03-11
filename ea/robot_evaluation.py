@@ -5,10 +5,12 @@ from robot_simulator.robot import Robot
 from robot_simulator.rooms import room_1
 from ann.Ann import Ann
 
+import time
+
 
 sigmoid_stretch = 0.5
 
-itterations = 1000
+itterations = 600
 ann_structure = [12, 3, 2]
 walls = room_1[0]
 dust = room_1[1]
@@ -26,24 +28,30 @@ def sigmoid(x):
 
 
 def evaluate_genotype(genotype, ind):
+
+    start = time.time()
     brain = Ann(ann_structure, genotype)
     body = Robot(ind, initial_pos, room_1, n_sensors=12)
     # weight_lists = brain.create_weights_lists()
     collision_counter = 0
+    c = 0
 
     for i in range(itterations):
-        sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
+        # sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
         if i % delta_t == 0:
+            sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
             body.set_vel_left(min(vel[0], max_vel))
             body.set_vel_right(min(vel[1], max_vel))
 
-        body.update_position()
+        if body.update_position():
+            collision_counter += 1
+
         robot_centre = Point(body.pos)
 
-        if min(sensor_data) < 3:
-            collision_counter += 1
-        
+        '''if min(sensor_data) < 3:
+            collision_counter += 1'''
+
         to_remove = []
         global dust
         for particle in dust:
@@ -57,5 +65,9 @@ def evaluate_genotype(genotype, ind):
             dust.remove(particle)
 
         body.dust += len(to_remove)
+
+    print(time.time()-start)
+    # print(c)
+    print("done iteration")
 
     return (body.dust / total_dust) - sigmoid(collision_counter)
