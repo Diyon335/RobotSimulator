@@ -10,13 +10,14 @@ Florent Didascalou (i6337071)
 """
 
 from sympy import Point, Segment, Ellipse
-from robot_simulator.gui import robot_radius, robot_border_size
 import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import Point as SPoint
 from shapely.geometry import MultiPoint
 
 horizontal_vector = [1, 0]
+robot_radius = 52
+robot_border_size = 2
 
 
 class Robot:

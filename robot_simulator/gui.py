@@ -17,6 +17,8 @@ from ann.Ann import Ann
 from robot_simulator.rooms import room_1
 from shapely.geometry import Point
 from ea.robot_evaluation import ann_structure
+from robot_simulator.robot import robot_radius
+from robot_simulator.robot import robot_border_size
 
 
 is_running = True
@@ -24,10 +26,10 @@ window_size = (900, 800)
 walls = room_1[0]
 dust = room_1[1]
 
-robot_radius = 52
+
 
 # Do not change. This is the width (in pixels) of the robot's outline
-robot_border_size = 2
+
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
 velocity_display_distance = 20
@@ -274,7 +276,7 @@ def run_genotype(genotype, room, initial_pos):
         window_surface.blit(v_r_text, v_r_rectangle)
 
         # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
-        sensors = [(sensor.angle, sensor.sense_distance2(), sensor.p1, sensor.p2) for sensor in robot.sensors]
+        sensors = [(sensor.angle, sensor.sense_distance2(), sensor.p1, sensor.p2) for sensor in body.sensors]
 
         for sensor in sensors:
 
