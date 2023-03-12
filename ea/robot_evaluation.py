@@ -27,7 +27,6 @@ def sigmoid(x):
 def evaluate_genotype(genotype, ind, room):
 
     dust = room[1]
-    total_dust = len(dust)
     
     start = time.time()
 
@@ -77,4 +76,4 @@ def evaluate_genotype(genotype, ind, room):
 
     print(f"\tEvaluated {ind} in {time.time() - start} seconds")
 
-    return (body.dust / total_dust) - sigmoid(collision_counter)
+    return (body.dust / room[2]) - sigmoid(collision_counter)
