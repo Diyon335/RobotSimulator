@@ -22,7 +22,7 @@ population_dictionary = {}
 
 population_size = 50
 
-generations = 10
+generations = 100
 
 offsprings_per_generation = 30
 
@@ -84,15 +84,18 @@ def run_algorithm(room):
             max fitness and average fitness of the population at every generation
     """
 
-    start = time.time()
-
     max_fitness_history = []
     avg_fitness_history = []
 
+    start = time.time()
     print(f"Running for {generations} generations with {population_size} genotypes\n"
           f"Initialising all genotypes")
 
     initialise(room)
+
+    print(f"Done initialising in {time.time() - start} seconds")
+
+    start = time.time()
 
     # Get the max and the avg fitness at the start
     features = [individual[1] for individual in population_dictionary.values()]

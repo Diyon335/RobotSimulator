@@ -11,13 +11,13 @@ import time
 
 sigmoid_stretch = 0.5
 
-itterations = 600
+itterations = 100
 ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
 max_vel = 40
 
-delta_t = 20
+delta_t = 4
 
 
 def sigmoid(x):
@@ -77,4 +77,4 @@ def evaluate_genotype(genotype, ind, room):
 
     print(f"\tEvaluated {ind} in {time.time() - start} seconds")
 
-    return (body.dust / room[2]) - sigmoid(collision_counter)
+    return (body.dust / total_dust) - sigmoid(collision_counter)
