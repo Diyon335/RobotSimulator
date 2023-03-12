@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # robot = Robot(1, robot_start, room_2, n_sensors=12)
     # gui.run(robot)
 
-    # run_algorithm(room_2)
+    run_algorithm(room_2)
 
     # # animate_evolution()
 
@@ -30,4 +30,4 @@ if __name__ == '__main__':
     # print(ann.feedforward([1, 2, 3, 4], ann.weights))
     # print(ann.feedforward([5, 6, 7, 8], ann.weights))'''
 
-    test_algorithm_with_parameters(room_2, 5, tests=5)
+    # test_algorithm_with_parameters(room_2, 5, tests=5)

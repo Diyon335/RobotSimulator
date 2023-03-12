@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 output = [0, 0]
 
 
@@ -62,6 +63,9 @@ class Ann:
         """
         return np.maximum(0, Z)
 
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
     def feedforward(self, sensor_input, weights_lists):
 
         real_input = sensor_input + self.prev_output
@@ -72,11 +76,13 @@ class Ann:
         """
         i = 1
         weights = self.split_list(weights_lists[0], self.layers[0])
-        layer = self.relu(np.dot(weights, real_input))
-        while i < len(self.layers):
+        layer = self.sigmoid(np.dot(weights, real_input))
+        while i < len(self.layers)-1:
             weights = self.split_list(weights_lists[i], self.layers[i])
-            layer = self.relu(np.dot(weights, layer))
+            layer = self.sigmoid(np.dot(weights, layer))
             i += 1
+        weights = self.split_list(weights_lists[i], self.layers[i])
+        layer = np.dot(weights, layer)
         new_l = layer[0]
         new_r = layer[1]
         if new_l > 0:
@@ -89,5 +95,6 @@ class Ann:
             new_r = (max(new_r, -self.max_vel))
 
         self.prev_output = [new_l, new_r]
+        # print(self.prev_output)
         return self.prev_output
 
