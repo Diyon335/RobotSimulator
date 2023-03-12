@@ -13,13 +13,13 @@ import copy
 
 sigmoid_stretch = 0.5
 
-itterations = 200
+itterations = 600
 ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
 max_vel = 20
 
-delta_t = 3
+delta_t = 8
 
 
 def sigmoid(x):
@@ -101,10 +101,10 @@ def evaluate_genotype(genotype, ind, room):
         y_min = max(y-robot_radius, 20)
         y_max = min(y+robot_radius, len(dust))
 
-        for i in range(y_min, y_max):
-            for j in range(x_min, x_max):
-                if dust[i][j] == 1:
-                    dust[i][j] = 0
+        for j in range(y_min, y_max):
+            for k in range(x_min, x_max):
+                if dust[j][k] == 1:
+                    dust[j][k] = 0
                     removed += 1
 
         body.dust += removed

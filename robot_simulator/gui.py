@@ -212,10 +212,11 @@ def run_genotype(genotype, room, initial_pos):
 
 
     new_room = copy.deepcopy(room)
-    dust = new_room[1]
+    new_room_2 = copy.deepcopy(room)
+    dust = new_room_2[1]
     
     brain = Ann(ann_structure, genotype)
-    body = Robot(1, initial_pos, room, n_sensors=12)
+    body = Robot(1, initial_pos, new_room, n_sensors=12)
     delta_t = 4
     max_vel = 20
 
@@ -226,7 +227,7 @@ def run_genotype(genotype, room, initial_pos):
         if i % delta_t == 0:
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
-            print(vel)
+            #print(vel)
             if vel[0] > 0:
                 body.set_vel_left(min(vel[0], max_vel))
             else:
@@ -265,20 +266,23 @@ def run_genotype(genotype, room, initial_pos):
         y_min = max(y-robot_radius, 20)
         y_max = min(y+robot_radius, len(dust))
 
-        print('Xs :')
-        print('\t' + str(x_min) + ', ' + str(x_max))
-        print('Ys :')
-        print('\t' + str(y_min) + ', ' + str(y_max))
+        # print('Xs :')
+        # print('\t' + str(x_min) + ', ' + str(x_max))
+        # print('Ys :')
+        # print('\t' + str(y_min) + ', ' + str(y_max))
 
-        for i in range(y_min, y_max):
-            for j in range(x_min, x_max):
-                if dust[i][j] == 1:
-                    dust[i][j] = 0
+        # print('start loop')
+        for j in range(y_min, y_max):
+            for k in range(x_min, x_max):
+                if dust[j][k] == 1:
+                    print(i, j)
+                    dust[j][k] = 0
 
-        for i in range(len(dust)):
-            for j in range(len(dust[0])):
-                if dust[i][j] == 1:
-                    pygame.draw.circle(window_surface, "#FF0000", (j, i), 2)
+        #print(dust[50])
+        for j in range(len(dust)):
+            for k in range(len(dust[0])):
+                if dust[j][k] == 1:
+                    pygame.draw.circle(window_surface, "#FF0000", (k, j), 2)
 
         v_l_text = font.render(str(body.v_l), True, "#000000")
         v_r_text = font.render(str(body.v_r), True, "#000000")

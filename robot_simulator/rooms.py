@@ -1,5 +1,6 @@
 from shapely.geometry import LineString, Point
 import random
+import copy
 
 """
 If you are creating a new room, make sure to run this file first
@@ -95,7 +96,7 @@ for i in range(860):
     row[i] = 1 if i > 15 and i % 15 == 0 else 0
 
 for i in range(780):
-    dust_2[i] = zero_rows if i < 21 else row
+    dust_2[i] = zero_rows if i < 21 else copy.deepcopy(row)
 
 
 room_1 = [walls_1, dust_1]
