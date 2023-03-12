@@ -88,22 +88,35 @@ dust_1 = [
     Point((421, 179)),
 ]
 
-dust_2 = [None for i in range(780)]
+room_1 = [walls_1, dust_1]
 
+####################################################
+dust_2 = [None for i in range(780)]
 zero_rows = [0 for i in range(860)]
 row = [0 for i in range(860)]
+
 for i in range(860):
     row[i] = 1 if i > 15 and i % 15 == 0 else 0
 
 for i in range(780):
     dust_2[i] = zero_rows if i < 21 else copy.deepcopy(row)
 
-
-room_1 = [walls_1, dust_1]
-
 total_dust_2 = sum([sum(row) for row in dust_2])
+
 room_2 = [walls_2, dust_2, total_dust_2]
 
+####################################################
+
+walls_3 = [
+    # Standard walls
+    LineString([(860, 20), (15, 20)]),
+    LineString([(15, 20), (15, 780)]),
+    LineString([(15, 780), (860, 780)]),
+    LineString([(860, 780), (860, 20)]),
+]
+
+
+####################################################
 
 def generate_random_dust(amount_of_dust):
 
