@@ -37,6 +37,7 @@ def evaluate_genotype(genotype, ind, room):
     brain = Ann(ann_structure, genotype)
     body = Robot(ind, initial_pos, room, n_sensors=12)
     collision_counter = 0
+    current_collison = False
 
     for i in range(itterations):
 
@@ -52,8 +53,14 @@ def evaluate_genotype(genotype, ind, room):
             else:
                 body.set_vel_right(max(vel[1], -max_vel))
 
+        
         if body.update_position():
-            collision_counter += 1
+            if not current_collison:
+                collision_counter += 1
+                current_collison = True
+        else:
+            current_collison = False
+                
 
         # robot_centre = Point(body.pos)
         #
