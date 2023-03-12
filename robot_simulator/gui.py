@@ -252,7 +252,7 @@ def run_genotype(genotype, room, initial_pos):
 
         pygame.draw.line(window_surface, "#000000", body.pos, robot_line_end, width=2)
         
-        for wall in walls:
+        for wall in room[0]:
             pygame.draw.line(window_surface, "#000000", wall.coords[0], wall.coords[1], width=2)
 
         font = pygame.font.Font(None, 20)
