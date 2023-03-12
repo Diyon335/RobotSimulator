@@ -92,7 +92,7 @@ dust_2 = [None for i in range(780)]
 zero_rows = [0 for i in range(860)]
 row = [0 for i in range(860)]
 for i in range(860):
-    row[i] = 1 if i > 15 and i % 5 == 0 else 0
+    row[i] = 1 if i > 15 and i % 15 == 0 else 0
 
 for i in range(780):
     dust_2[i] = zero_rows if i < 21 else row

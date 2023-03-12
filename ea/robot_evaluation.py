@@ -25,6 +25,11 @@ delta_t = 3
 def sigmoid(x):
     return (2 / (1 + np.exp(- sigmoid_stretch * x))) - 1
 
+def sensor_squash(t):
+    A = 100
+    alpha = 0.1
+    tau = 1
+    return A + (alpha*A -A)*(1-np.exp(-t/tau))
 
 def evaluate_genotype(genotype, ind, room):
 
@@ -43,6 +48,7 @@ def evaluate_genotype(genotype, ind, room):
 
         if i % delta_t == 0:
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
+            sensor_data = [sensor_squash(reading) for reading in sensor_data]
             vel = brain.feedforward(sensor_data, brain.weights)
             if vel[0] > 0:
                 body.set_vel_left(min(vel[0], max_vel))

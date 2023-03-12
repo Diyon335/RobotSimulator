@@ -237,7 +237,7 @@ def run_genotype(genotype, room, initial_pos):
                 body.set_vel_right(max(vel[1], -max_vel))
 
         body.update_position()
-        robot_centre = Point(body.pos)
+
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
@@ -256,6 +256,29 @@ def run_genotype(genotype, room, initial_pos):
             pygame.draw.line(window_surface, "#000000", wall.coords[0], wall.coords[1], width=2)
 
         font = pygame.font.Font(None, 20)
+
+        x, y = body.pos
+        x, y = int(x), int(y)
+
+        x_min = max(x-robot_radius, 15)
+        x_max = min(x+robot_radius, len(dust[0]))
+        y_min = max(y-robot_radius, 20)
+        y_max = min(y+robot_radius, len(dust))
+
+        print('Xs :')
+        print('\t' + str(x_min) + ', ' + str(x_max))
+        print('Ys :')
+        print('\t' + str(y_min) + ', ' + str(y_max))
+
+        for i in range(y_min, y_max):
+            for j in range(x_min, x_max):
+                if dust[i][j] == 1:
+                    dust[i][j] = 0
+
+        for i in range(len(dust)):
+            for j in range(len(dust[0])):
+                if dust[i][j] == 1:
+                    pygame.draw.circle(window_surface, "#FF0000", (j, i), 2)
 
         v_l_text = font.render(str(body.v_l), True, "#000000")
         v_r_text = font.render(str(body.v_r), True, "#000000")
