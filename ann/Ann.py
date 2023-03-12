@@ -19,6 +19,7 @@ class Ann:
         self.genotype = genotype
         self.prev_output = [0, 0]
         self.weights = self.create_weights_lists()
+        self.max_vel = 20
 
     def create_weights_lists(self):
 
@@ -76,6 +77,17 @@ class Ann:
             weights = self.split_list(weights_lists[i], self.layers[i])
             layer = self.relu(np.dot(weights, layer))
             i += 1
-        self.prev_output = [layer[0], layer[1]]
+        new_l = layer[0]
+        new_r = layer[1]
+        if new_l > 0:
+            new_l = min(new_l, self.max_vel)
+        else:
+            new_l = max(new_l, -self.max_vel)
+        if new_r > 0:
+            new_r = (min(new_r, self.max_vel))
+        else:
+            new_r = (max(new_r, -self.max_vel))
+
+        self.prev_output = [new_l, new_r]
         return self.prev_output
 
