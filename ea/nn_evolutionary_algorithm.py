@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import random
 from celluloid import Camera
 from matplotlib import colors
+from scipy.stats import sem
 
 from ea.encoding import real_number_encoding
 from ea.selection import tournament_selection
@@ -17,6 +18,7 @@ from ea.robot_evaluation import evaluate_genotype
 import time
 
 output_directory = "animations/ea_benchmark/diyon/"
+plot_directory = "plots/"
 phenotype_history = []
 population_dictionary = {}
 
@@ -221,7 +223,7 @@ def animate_evolution():
     plt.show()
 
 
-def test_helper(results, value, tests):
+def test_helper(results, value, tests, room):
     """
     A helper function to make code more concise
     Initialises average max fitness and average average fitness arrays, runs the evolutionary algorithm multiple times
@@ -238,7 +240,7 @@ def test_helper(results, value, tests):
     results[value] = []
 
     for itter in range(tests):
-        max_fitness_history, avg_fitness_history = run_algorithm()
+        max_fitness_history, avg_fitness_history = run_algorithm(room)
         for i in range(len(max_fitness_history)):
             avg_max_fitnesses[i] += max_fitness_history[i]
             avg_avg_fitnesses[i] += avg_fitness_history[i]
@@ -248,7 +250,7 @@ def test_helper(results, value, tests):
     results[value].append(avg_avg_fitnesses)
 
 
-def testing_routine(parameter_set, parameter, tests=100, short=False):
+def testing_routine(parameter_set, parameter, room, tests=100, short=False):
     """
     The function that handles running multiple experiments with different values for a given parameter
     to be investigated
@@ -276,7 +278,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
             global tournament_k
             tournament_k = value
-            test_helper(results, value, tests)
+            test_helper(results, value, tests, room)
             print("Finished with value " + str(value))
 
     elif parameter == "offsprings_per_generation":
@@ -285,7 +287,7 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
             global offsprings_per_generation
             offsprings_per_generation = value
-            test_helper(results, value, tests)
+            test_helper(results, value, tests, room)
             print("Finished with value " + str(value))
 
     elif parameter == "mutation_rate":
@@ -294,7 +296,162 @@ def testing_routine(parameter_set, parameter, tests=100, short=False):
 
             global mutation_rate
             mutation_rate = value
-            test_helper(results, value, tests)
+            test_helper(results, value, tests, room)
             print("Finished with value "+str(value))
 
     return results
+
+
+def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
+    """
+    This function allows the value of parameters to be changed by passing in values
+
+    Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
+    of generations
+
+    :return: a max fitness array and an average fitness array, both of length equal to number of generations + 1
+            (to include "generation 0" after initialisation but before any reproduction has taken place), containing
+            max fitness and average fitness of the population at every generation
+    """
+
+    max_fitness_history = []
+    avg_fitness_history = []
+
+    start = time.time()
+    print(f"Running for {gens} generations with {population_size} genotypes\n"
+          f"Initialising all genotypes")
+
+    initialise(room)
+
+    print(f"Done initialising in {time.time() - start} seconds")
+
+    start = time.time()
+
+    # Get the max and the avg fitness at the start
+    features = [individual[1] for individual in population_dictionary.values()]
+    max_fitness_history.append(max(features))
+    avg_fitness_history.append(sum(features) / len(features))
+
+    for i in range(gens):
+
+        print(f"Evaluating generation: {i}")
+
+        # SELECTION
+        # For the number of desired offspring per generation, choose the best parent
+        # and momentarily copy them over in a dedicated offspring dictionary
+        offspring_dictionary = {}
+
+        for j in range(num_offspring):
+
+            best_parent = selection_strategy(population_dictionary, k=k)
+
+            # offspring is initialised (genotype is set as empty, fitness is set to 0)
+            offspring_dictionary[j] = [[], 0]
+
+            # genotype of offspring is copied over from parent
+            for gene in population_dictionary[best_parent][0]:
+                offspring_dictionary[j][0].append(gene)
+
+        # CROSS OVER
+        crossover_events = int(random.uniform(0.1, 0.4)*num_offspring)
+
+        for _ in range(crossover_events):
+
+            offspring_pair = choose_pair(offspring_dictionary)
+            rng = random.randint(0, 99)
+
+            if rng < 33:
+                one_point_crossover(offspring_dictionary, offspring_pair)
+            elif rng < 66:
+                uniform_crossover(offspring_dictionary, offspring_pair)
+            else:
+                arithmetic_crossover(offspring_dictionary, offspring_pair, integers=False)
+
+        # MUTATION
+        for target_offspring in offspring_dictionary:
+            mutation(offspring_dictionary, target_offspring, mr, integers=False)
+
+        # REPRODUCTION
+        # before offsprings are added into the population, but after they have undergone crossover and mutation events
+        # (so that their genotype is "finalised"), their fitness and phenotype is computed
+        for offspring in offspring_dictionary:
+
+            genotype = offspring_dictionary[offspring][0]
+
+            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring, room)
+
+        reproduction_strategy(population_dictionary, offspring_dictionary)
+
+        # max fitness and average fitness of the population are extracted and appended to the max fitness and
+        # average fitness arrays
+        features = [individual[1] for individual in population_dictionary.values()]
+
+        max_fitness = max(features)
+        avg_fitness = sum(features) / len(features)
+        max_fitness_history.append(max_fitness)
+        avg_fitness_history.append(avg_fitness)
+
+        end = time.time()
+        print(f"Finished generation {i} in {end - start} seconds.\n "
+              f"Max fitness: {max_fitness}\n "
+              f"Avg. fitness: {avg_fitness}")
+
+        start = time.time()
+
+    return max_fitness_history, avg_fitness_history
+
+
+def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_offspring=offsprings_per_generation, mr=mutation_rate, tests=100):
+
+    max_fitness = []
+    avg_fitness = []
+
+    print(f"Running the algorithm for {tests} tests, each containing {gens} generations.\n"
+          f"Parameters:\n"
+          f"k = {tournament_k}\n"
+          f"offspring per gen = {num_offspring}\n"
+          f"mutation rate = {mr}")
+
+    for i in range(tests):
+
+        print(f"TEST {i+1}:")
+
+        max_fitness_history, avg_fitness_history = run_algorithm_with_parameters(room, gens, k, num_offspring, mr)
+
+        max_fitness.append(max_fitness_history)
+        avg_fitness.append(avg_fitness_history)
+
+    avg_max_fitness = []
+    avg_avg_fitness = []
+
+    max_fitness_error = []
+    avg_fitness_error = []
+
+    for j in range(gens):
+
+        total_max_fitness = []
+        total_avg_fitness = []
+
+        for k in range(tests):
+
+            total_max_fitness.append(max_fitness[k][j])
+            total_avg_fitness.append(avg_fitness[k][j])
+
+        avg_max_fitness.append(sum(total_max_fitness) / tests)
+        avg_avg_fitness.append(sum(total_avg_fitness) / tests)
+
+        max_fitness_error.append(sem(total_max_fitness))
+        avg_fitness_error.append(sem(total_avg_fitness))
+
+    generation_list = [gen for gen in range(gens)]
+
+    plt.errorbar(generation_list, avg_max_fitness, yerr=max_fitness_error, c='b', ls='-', fmt='.', label="Max Fitness")
+    plt.errorbar(generation_list, avg_avg_fitness, yerr=avg_fitness_error, c='r', ls='-', fmt='.', label="Average Fitness")
+
+    plt.xlabel("Generations")
+    plt.ylabel("Fitness")
+
+    plt.xlim(0, gens)
+    plt.legend(loc='lower right')
+    plt.savefig(plot_directory+f"{gens}gens_{k}k_{mr}mr_{num_offspring}off_{tests}tests.png")
+
