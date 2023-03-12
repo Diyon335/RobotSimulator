@@ -13,17 +13,16 @@ from ea.crossover_mutation import choose_pair, one_point_crossover, uniform_cros
 from ea.reproduction import generational_rollover
 from ea.evaluation import get_xy_phenotype, cost_rosenbrock, cost_rastrigin
 from ea.robot_evaluation import evaluate_genotype
-from robot_simulator.rooms import room_2
 
 import time
 
 output_directory = "animations/ea_benchmark/diyon/"
-# phenotype_history = []
+phenotype_history = []
 population_dictionary = {}
 
 population_size = 50
 
-generations = 10
+generations = 100
 
 offsprings_per_generation = 30
 
@@ -39,9 +38,6 @@ tournament_k = 6
 # Variables for the crossover/mutation strategies
 mutation_rate = 3
 
-start = 0
-
-
 """
 IMPORTANT: 
 
@@ -50,13 +46,13 @@ actually those that the strategy/functions require
 
 """
 encoding_strategy = real_number_encoding
-# phenotype_computer = get_xy_phenotype
-# cost_function = cost_rosenbrock
+phenotype_computer = get_xy_phenotype
+cost_function = cost_rosenbrock
 selection_strategy = tournament_selection
 reproduction_strategy = generational_rollover
 
 
-def initialise():
+def initialise(room):
     """
     This function populates the population dictionary by using the specified encoding strategy.
     Each individual has a key (integer), a genotype array and a fitness.
@@ -74,18 +70,11 @@ def initialise():
     for individual in range(population_size):
 
         genotype = encoding_strategy(genotype_length, genotype_min_range, genotype_max_range, integers=whole_numbers)
-        # x, y = phenotype_computer(genotype)
-        # generation.append((x, y))
 
-        population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual, room_2)]
-
-    # phenotype_history.append(generation)
-
-    global start
-    start = time.time()
+        population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual, room)]
 
 
-def run_algorithm():
+def run_algorithm(room):
     """
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
@@ -98,14 +87,24 @@ def run_algorithm():
     max_fitness_history = []
     avg_fitness_history = []
 
-    initialise()
+    start = time.time()
+    print(f"Running for {generations} generations with {population_size} genotypes\n"
+          f"Initialising all genotypes")
 
-    features = list(population_dictionary.values())
-    features.sort(key=lambda feature: feature[1])
-    max_fitness_history.append(features[-1][1])
-    avg_fitness_history.append(sum([ind[1] for ind in features]) / len(features))
+    initialise(room)
+
+    print(f"Done initialising in {time.time() - start} seconds")
+
+    start = time.time()
+
+    # Get the max and the avg fitness at the start
+    features = [individual[1] for individual in population_dictionary.values()]
+    max_fitness_history.append(max(features))
+    avg_fitness_history.append(sum(features) / len(features))
 
     for i in range(generations):
+
+        print(f"Evaluating generation: {i}")
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -148,35 +147,26 @@ def run_algorithm():
         for offspring in offspring_dictionary:
 
             genotype = offspring_dictionary[offspring][0]
-            # offspring_dictionary[offspring][2] = phenotype_computer(genotype)
 
-            # x, y = offspring_dictionary[offspring][2]
-            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring, room_2)
+            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring, room)
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
         # max fitness and average fitness of the population are extracted and appended to the max fitness and
         # average fitness arrays
-        features = list(population_dictionary.values())
-        features.sort(key=lambda feature: feature[1])
-        max_fitness_history.append(features[-1][1])
-        avg_fitness_history.append(sum([ind[1] for ind in features])/len(features))
+        features = [individual[1] for individual in population_dictionary.values()]
+
+        max_fitness = max(features)
+        avg_fitness = sum(features) / len(features)
+        max_fitness_history.append(max_fitness)
+        avg_fitness_history.append(avg_fitness)
 
         end = time.time()
-        global start
-        print(end - start)
-        print("gen ", str(i), " done; max fitness is ", str(features[-1][1]))
+        print(f"Finished generation {i} in {end - start} seconds.\n "
+              f"Max fitness: {max_fitness}\n "
+              f"Avg. fitness: {avg_fitness}")
 
-        # EVALUATION
-        # For each individual, add phenotype to phenotype history
-        # (at generation 0 this is done by initialise())
-        '''generation = []
-        for individual in population_dictionary:
-            # Get phenotype
-            x, y = population_dictionary[individual][2]
-            generation.append((x, y))
-
-        phenotype_history.append(generation)'''
+        start = time.time()
 
     return max_fitness_history, avg_fitness_history
 

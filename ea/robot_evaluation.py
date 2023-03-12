@@ -7,20 +7,21 @@ from robot_simulator.gui import robot_radius
 from ann.Ann import Ann
 
 import time
+import copy
 
 
 sigmoid_stretch = 0.5
 
 itterations = 100
+itterations = 100
 ann_structure = [12, 3, 2]
-#walls = room_1[0]
-#dust = room_1[1]
-#total_dust = len(dust)
 
 initial_pos = (450, 400)
+max_vel = 40
 robot_radius = 52
 max_vel = 20
 
+delta_t = 4
 delta_t = 4
 
 
@@ -29,17 +30,18 @@ def sigmoid(x):
 
 
 def evaluate_genotype(genotype, ind, room):
-    dust = room[1]
+
+    new_room = copy.deepcopy(room)
+    dust = new_room[1]
     
     start = time.time()
+
     brain = Ann(ann_structure, genotype)
     body = Robot(ind, initial_pos, room, n_sensors=12)
-    # weight_lists = brain.create_weights_lists()
     collision_counter = 0
-    c = 0
 
     for i in range(itterations):
-        # sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
+
         if i % delta_t == 0:
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
@@ -55,21 +57,17 @@ def evaluate_genotype(genotype, ind, room):
         if body.update_position():
             collision_counter += 1
 
-        robot_centre = Point(body.pos)
-
-        '''if min(sensor_data) < 3:
-            collision_counter += 1'''
-
+        # robot_centre = Point(body.pos)
+        #
         # to_remove = []
-        # global dust
         # for particle in dust:
-
+        #
         #     if robot_centre.distance(particle) <= robot_radius:
         #         to_remove.append(particle)
-
-        # # for particle in to_remove:
-        # #     dust.remove(particle)
-
+        #
+        # for particle in to_remove:
+        #     dust.remove(particle)
+        #
         # body.dust += len(to_remove)
 
         removed = 0
@@ -88,6 +86,7 @@ def evaluate_genotype(genotype, ind, room):
 
         body.dust += removed
 
+    print(f"\tEvaluated {ind} in {time.time() - start} seconds")
     #print(time.time()-start)
     # print(c)
     #print("done evaluation")
