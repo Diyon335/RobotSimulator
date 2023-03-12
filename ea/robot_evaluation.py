@@ -46,34 +46,34 @@ def evaluate_genotype(genotype, ind, room):
         if body.update_position():
             collision_counter += 1
 
-        robot_centre = Point(body.pos)
-
-        to_remove = []
-        for particle in dust:
-
-            if robot_centre.distance(particle) <= robot_radius:
-                to_remove.append(particle)
-
-        for particle in to_remove:
-            dust.remove(particle)
-
-        body.dust += len(to_remove)
-
-        # removed = 0
+        # robot_centre = Point(body.pos)
         #
-        # x, y = body.pos
-        # x_min = max(x-robot_radius, 15)
-        # x_max = min(x+robot_radius, len(dust[0]))
-        # y_min = max(y-robot_radius, 20)
-        # y_max = min(y+robot_radius, len(dust))
+        # to_remove = []
+        # for particle in dust:
         #
-        # for i in range(int(y_min), int(y_max), 1):
-        #     for j in range(int(x_min), int(x_max), 1):
-        #         if dust[i][j] == 1:
-        #             dust[i][j] = 0
-        #             removed += 1
+        #     if robot_centre.distance(particle) <= robot_radius:
+        #         to_remove.append(particle)
         #
-        # body.dust += removed
+        # for particle in to_remove:
+        #     dust.remove(particle)
+        #
+        # body.dust += len(to_remove)
+
+        removed = 0
+
+        x, y = body.pos
+        x_min = max(x-robot_radius, 15)
+        x_max = min(x+robot_radius, len(dust[0]))
+        y_min = max(y-robot_radius, 20)
+        y_max = min(y+robot_radius, len(dust))
+
+        for i in range(int(y_min), int(y_max), 1):
+            for j in range(int(x_min), int(x_max), 1):
+                if dust[i][j] == 1:
+                    dust[i][j] = 0
+                    removed += 1
+
+        body.dust += removed
 
     print(f"\tEvaluated {ind} in {time.time() - start} seconds")
 
