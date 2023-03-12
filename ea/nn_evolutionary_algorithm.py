@@ -24,7 +24,7 @@ population_dictionary = {}
 
 population_size = 40
 
-generations = 20
+generations = 100
 
 offsprings_per_generation = 25
 
@@ -76,11 +76,13 @@ def initialise(room):
         population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual, room)]
 
 
-def run_algorithm(room):
+def run_algorithm(room, file):
     """
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
 
+    :param room: Room list
+    :param file: An open file to write to
     :return: a max fitness array and an average fitness array, both of length equal to number of generations + 1
             (to include "generation 0" after initialisation but before any reproduction has taken place), containing
             max fitness and average fitness of the population at every generation
@@ -93,9 +95,18 @@ def run_algorithm(room):
     print(f"Running for {generations} generations with {population_size} genotypes\n"
           f"Initialising all genotypes")
 
+    file.write(f"This file contains a run for {generations} generations with {population_size} genotypes\n"
+               f"offspring per generation: {offsprings_per_generation}\n"
+               f"k: {tournament_k}\n"
+               f"mutation rate: {mutation_rate}\n\n")
+
     initialise(room)
 
     print(f"Done initialising in {time.time() - start} seconds")
+
+    file.write("Initialised genotypes:\n")
+    write_dictionary(population_dictionary, file)
+    file.write("############################\n")
 
     start = time.time()
 
@@ -106,7 +117,8 @@ def run_algorithm(room):
 
     for i in range(generations):
 
-        print(f"Evaluating generation: {i}")
+        print(f"Evaluating generation: {i+1}")
+        file.write(f"GENERATION: {i+1}\n")
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -164,15 +176,34 @@ def run_algorithm(room):
         avg_fitness_history.append(avg_fitness)
 
         end = time.time()
-        print(f"Finished generation {i} in {end - start} seconds.\n "
+        print(f"Finished generation {i+1} in {end - start} seconds.\n "
               f"Max fitness: {max_fitness}\n "
               f"Avg. fitness: {avg_fitness}")
         
         start = time.time()
+
+        write_dictionary(population_dictionary, file)
+        file.write("############################\n")
     
     best_genotype = max(population_dictionary.values(), key=lambda x: x[1])
-    print(best_genotype)
+    print(f"The best genotype is:\n"
+          f"{best_genotype}")
+
+    file.write(f"The best genotype is: {best_genotype}")
+
     return max_fitness_history, avg_fitness_history
+
+
+def write_dictionary(dictionary, file):
+
+    for genotype_id in dictionary:
+
+        line = f"ID: {str(genotype_id)}\n" \
+               f"Genotype: {str(dictionary[genotype_id][0])}\n" \
+               f"Fitness: {str(dictionary[genotype_id][1])}\n\n"
+
+        file.write(line)
+        file.write("------------------------------------\n")
 
 
 def animate_evolution():
@@ -304,13 +335,14 @@ def testing_routine(parameter_set, parameter, room, tests=100, short=False):
     return results
 
 
-def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
+def run_algorithm_with_parameters(room, gens, k, num_offspring, mr, file):
     """
     This function allows the value of parameters to be changed by passing in values
 
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
 
+    :param file: An open file object
     :param mr: Integer for mutation rate
     :param num_offspring: Integer for number of offspring per generation
     :param k: Integer for tournament k
@@ -329,9 +361,18 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
     print(f"Running for {gens} generations with {population_size} genotypes\n"
           f"Initialising all genotypes")
 
+    file.write(f"This file contains a run for {gens} generations with {population_size} genotypes\n"
+               f"offspring per generation: {num_offspring}\n"
+               f"k: {k}\n"
+               f"mutation rate: {mr}\n\n")
+
     initialise(room)
 
     print(f"Done initialising in {time.time() - start} seconds")
+
+    file.write("Initialised genotypes:\n")
+    write_dictionary(population_dictionary, file)
+    file.write("############################\n")
 
     start = time.time()
 
@@ -342,7 +383,8 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
 
     for i in range(gens):
 
-        print(f"Evaluating generation: {i}")
+        print(f"Evaluating generation: {i + 1}")
+        file.write(f"GENERATION: {i + 1}\n")
 
         # SELECTION
         # For the number of desired offspring per generation, choose the best parent
@@ -400,16 +442,25 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
         avg_fitness_history.append(avg_fitness)
 
         end = time.time()
-        print(f"Finished generation {i} in {end - start} seconds.\n "
+        print(f"Finished generation {i+1} in {end - start} seconds.\n "
               f"Max fitness: {max_fitness}\n "
               f"Avg. fitness: {avg_fitness}")
 
+        write_dictionary(population_dictionary, file)
+        file.write("############################\n")
+
         start = time.time()
+
+    best_genotype = max(population_dictionary.values(), key=lambda x: x[1])
+    print(f"The best genotype is:\n"
+          f"{best_genotype}")
+
+    file.write(f"The best genotype is: {best_genotype}")
 
     return max_fitness_history, avg_fitness_history
 
 
-def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_offspring=offsprings_per_generation, mr=mutation_rate, tests=100):
+def test_algorithm_with_parameters(room, file, plot_name, gens=generations, k=tournament_k, num_offspring=offsprings_per_generation, mr=mutation_rate, tests=100):
     """
     Plots the average max fitness and average fitness from all run tests over a number of generations.
 
@@ -436,11 +487,14 @@ def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_o
     for i in range(tests):
 
         print(f"TEST {i+1}:")
+        file.write(f"TEST {i+1}\n")
 
-        max_fitness_history, avg_fitness_history = run_algorithm_with_parameters(room, gens, k, num_offspring, mr)
+        max_fitness_history, avg_fitness_history = run_algorithm_with_parameters(room, gens, k, num_offspring, mr, file)
 
         max_fitness.append(max_fitness_history)
         avg_fitness.append(avg_fitness_history)
+
+        file.write("##############################################\n")
 
     # Holds the average max fitness and average average fitness over all tests, per generation
     avg_max_fitness = []
@@ -480,5 +534,5 @@ def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_o
     plt.legend(loc='lower right')
 
     # Save
-    plt.savefig(plot_directory+f"{gens}gens_{k}k_{mr}mr_{num_offspring}off_{tests}tests.png")
+    plt.savefig(plot_directory+plot_name)
 

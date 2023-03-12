@@ -26,11 +26,6 @@ window_size = (900, 800)
 walls = room_1[0]
 dust = room_1[1]
 
-
-
-# Do not change. This is the width (in pixels) of the robot's outline
-
-
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
 velocity_display_distance = 20
 
@@ -195,7 +190,6 @@ def run(robot):
         pygame.display.update()
 
 
-
 def run_genotype(genotype, room, initial_pos):
     
     pygame.init()
@@ -210,7 +204,6 @@ def run_genotype(genotype, room, initial_pos):
 
     clock = pygame.time.Clock()
 
-
     new_room = copy.deepcopy(room)
     new_room_2 = copy.deepcopy(room)
     dust = new_room_2[1]
@@ -220,14 +213,13 @@ def run_genotype(genotype, room, initial_pos):
     delta_t = 4
     max_vel = 20
 
-    
     for i in range(200):
 
-
         if i % delta_t == 0:
+
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
-            #print(vel)
+
             if vel[0] > 0:
                 body.set_vel_left(min(vel[0], max_vel))
             else:
@@ -238,7 +230,6 @@ def run_genotype(genotype, room, initial_pos):
                 body.set_vel_right(max(vel[1], -max_vel))
 
         body.update_position()
-
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
@@ -266,19 +257,11 @@ def run_genotype(genotype, room, initial_pos):
         y_min = max(y-robot_radius, 20)
         y_max = min(y+robot_radius, len(dust))
 
-        # print('Xs :')
-        # print('\t' + str(x_min) + ', ' + str(x_max))
-        # print('Ys :')
-        # print('\t' + str(y_min) + ', ' + str(y_max))
-
-        # print('start loop')
         for j in range(y_min, y_max):
             for k in range(x_min, x_max):
                 if dust[j][k] == 1:
-                    print(i, j)
                     dust[j][k] = 0
 
-        #print(dust[50])
         for j in range(len(dust)):
             for k in range(len(dust[0])):
                 if dust[j][k] == 1:
@@ -322,5 +305,3 @@ def run_genotype(genotype, room, initial_pos):
 
         clock.tick(60)
         pygame.display.update()
-
-    return None

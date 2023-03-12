@@ -13,6 +13,7 @@ from robot_simulator.robot import Robot
 from ann.Ann import Ann
 from robot_simulator.gui import run_genotype
 
+genotype_directory = "genotype_data/"
 
 # Where to place the robot at the start
 robot_start = (450, 400)
@@ -23,9 +24,13 @@ if __name__ == '__main__':
     # robot = Robot(1, robot_start, room_2, n_sensors=12)
     # gui.run(robot)
 
-    run_algorithm(room_2)
+    file_name = "test.txt"
+    plot_name = "graph_for_test.png"
 
-    #run_genotype(genotype, room_2, robot_start)
+    file = open(genotype_directory+file_name, "w")
+    # run_algorithm(room_2, file)
+
+    # run_genotype(genotype, room_2, robot_start)
     # # animate_evolution()
 
     # '''ann = Ann([4, 3, 2],
@@ -34,4 +39,6 @@ if __name__ == '__main__':
     # print(ann.feedforward([1, 2, 3, 4], ann.weights))
     # print(ann.feedforward([5, 6, 7, 8], ann.weights))'''
 
-    # test_algorithm_with_parameters(room_2, 5, tests=5)
+    test_algorithm_with_parameters(room_2, file, plot_name, tests=2)
+
+    file.close()

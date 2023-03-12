@@ -25,14 +25,15 @@ delta_t = 8
 def sigmoid(x):
     return (2 / (1 + np.exp(- sigmoid_stretch * x))) - 1
 
+
 def sensor_squash(t):
     A = 100
     alpha = 0.1
     tau = 1
     return A + (alpha*A -A)*(1-np.exp(-t/tau))
 
-def evaluate_genotype(genotype, ind, room):
 
+def evaluate_genotype(genotype, ind, room):
 
     new_room = copy.deepcopy(room)
     dust = new_room[1]
@@ -42,7 +43,7 @@ def evaluate_genotype(genotype, ind, room):
     brain = Ann(ann_structure, genotype)
     body = Robot(ind, initial_pos, room, n_sensors=12)
     collision_counter = 0
-    current_collison = False
+    current_collision = False
 
     for i in range(itterations):
 
@@ -72,11 +73,11 @@ def evaluate_genotype(genotype, ind, room):
         #     body.set_vel_right(max(vel[1], -max_vel))
 
         if body.update_position():
-            if not current_collison:
+            if not current_collision:
                 collision_counter += 1
-                current_collison = True
+                current_collision = True
         else:
-            current_collison = False
+            current_collision = False
 
         # robot_centre = Point(body.pos)
         #
@@ -108,20 +109,11 @@ def evaluate_genotype(genotype, ind, room):
                     removed += 1
 
         body.dust += removed
-        #print(sum([sum(row) for row in dust]))
-        #print('collected dust: ' + str(removed))
 
     print(f"\tEvaluated {ind} in {time.time() - start} seconds")
-    # print(time.time()-start)
-    # print(c)
-    # print("done evaluation")
-    #print(body.dust)
-    #print('Initial Total dust: ' + str(room[2]))
+
     dust_left = sum([sum(row) for row in dust])
     dust_removed = room[2] - dust_left
-    #print(dust_removed)
-    print('dust fitness : ' + str(dust_removed/room[2]))
 
     fitness = (dust_removed / room[2]) - sigmoid(collision_counter)
-    print('Fitness : ' + str(fitness))
     return fitness
