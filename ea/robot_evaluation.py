@@ -13,15 +13,13 @@ import copy
 sigmoid_stretch = 0.5
 
 itterations = 100
-itterations = 100
 ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
-max_vel = 40
 robot_radius = 52
 max_vel = 20
 
-delta_t = 4
+
 delta_t = 4
 
 
