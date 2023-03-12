@@ -3,8 +3,9 @@ import numpy as np
 
 from robot_simulator.robot import Robot
 from robot_simulator.rooms import room_1
-from robot_simulator.gui import robot_radius
+from robot_simulator.robot import robot_radius
 from ann.Ann import Ann
+
 
 import time
 import copy
@@ -12,13 +13,13 @@ import copy
 
 sigmoid_stretch = 0.5
 
-itterations = 1000
+itterations = 100
 ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
 max_vel = 20
 
-# delta_t = 4
+delta_t = 3
 
 
 def sigmoid(x):
@@ -27,7 +28,6 @@ def sigmoid(x):
 
 def evaluate_genotype(genotype, ind, room):
 
-    print(genotype)
 
     new_room = copy.deepcopy(room)
     dust = new_room[1]
@@ -41,7 +41,7 @@ def evaluate_genotype(genotype, ind, room):
 
     for i in range(itterations):
 
-        '''if i % delta_t == 0:
+        if i % delta_t == 0:
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
             if vel[0] > 0:
@@ -51,19 +51,19 @@ def evaluate_genotype(genotype, ind, room):
             if vel[1] > 0:
                 body.set_vel_right(min(vel[1], max_vel))
             else:
-                body.set_vel_right(max(vel[1], -max_vel))'''
+                body.set_vel_right(max(vel[1], -max_vel))
 
-        sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
-        # print(sensor_data)
-        vel = brain.feedforward(sensor_data, brain.weights)
-        if vel[0] > 0:
-            body.set_vel_left(min(vel[0], max_vel))
-        else:
-            body.set_vel_left(max(vel[0], -max_vel))
-        if vel[1] > 0:
-            body.set_vel_right(min(vel[1], max_vel))
-        else:
-            body.set_vel_right(max(vel[1], -max_vel))
+        # sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
+        # # print(sensor_data)
+        # vel = brain.feedforward(sensor_data, brain.weights)
+        # if vel[0] > 0:
+        #     body.set_vel_left(min(vel[0], max_vel))
+        # else:
+        #     body.set_vel_left(max(vel[0], -max_vel))
+        # if vel[1] > 0:
+        #     body.set_vel_right(min(vel[1], max_vel))
+        # else:
+        #     body.set_vel_right(max(vel[1], -max_vel))
 
         if body.update_position():
             if not current_collison:
@@ -89,7 +89,7 @@ def evaluate_genotype(genotype, ind, room):
 
         x, y = body.pos
         x, y = int(x), int(y)
-        print(x, y)
+
         x_min = max(x-robot_radius, 15)
         x_max = min(x+robot_radius, len(dust[0]))
         y_min = max(y-robot_radius, 20)
@@ -102,14 +102,19 @@ def evaluate_genotype(genotype, ind, room):
                     removed += 1
 
         body.dust += removed
-        print(sum([sum(row) for row in dust]))
+        #print(sum([sum(row) for row in dust]))
+        #print('collected dust: ' + str(removed))
 
     print(f"\tEvaluated {ind} in {time.time() - start} seconds")
     # print(time.time()-start)
     # print(c)
     # print("done evaluation")
-    print(body.dust, room[2], collision_counter)
+    #print(body.dust)
+    #print('Initial Total dust: ' + str(room[2]))
+    dust_left = sum([sum(row) for row in dust])
+    dust_removed = room[2] - dust_left
+    #print(dust_removed)
+    print('dust fitness : ' + str(dust_removed/room[2]))
 
-    exit()
 
-    return (body.dust / room[2]) - collision_counter
+    return (dust_removed / room[2]) - collision_counter
