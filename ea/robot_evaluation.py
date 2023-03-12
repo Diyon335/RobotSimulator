@@ -11,7 +11,7 @@ import time
 
 sigmoid_stretch = 0.5
 
-itterations = 600
+itterations = 100
 ann_structure = [12, 3, 2]
 #walls = room_1[0]
 #dust = room_1[1]
@@ -19,9 +19,9 @@ ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
 robot_radius = 52
-max_vel = 40
+max_vel = 20
 
-delta_t = 20
+delta_t = 4
 
 
 def sigmoid(x):
@@ -43,8 +43,14 @@ def evaluate_genotype(genotype, ind, room):
         if i % delta_t == 0:
             sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
             vel = brain.feedforward(sensor_data, brain.weights)
-            body.set_vel_left(min(vel[0], max_vel))
-            body.set_vel_right(min(vel[1], max_vel))
+            if vel[0] > 0:
+                body.set_vel_left(min(vel[0], max_vel))
+            else:
+                body.set_vel_left(max(vel[0], -max_vel))
+            if vel[1] > 0:
+                body.set_vel_right(min(vel[1], max_vel))
+            else:
+                body.set_vel_right(max(vel[1], -max_vel))
 
         if body.update_position():
             collision_counter += 1
@@ -82,12 +88,10 @@ def evaluate_genotype(genotype, ind, room):
 
         body.dust += removed
 
-    print(time.time()-start)
+    #print(time.time()-start)
     # print(c)
-    print("done evaluation")
+    #print("done evaluation")
 
-    print(time.time()-start)
-    # print(c)
-    print("done evaluation")
+
 
     return (body.dust / room[2]) - sigmoid(collision_counter)
