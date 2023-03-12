@@ -10,8 +10,14 @@ Florent Didascalou (i6337071)
 """
 import math
 import pygame
+import copy
+
+from robot_simulator.robot import Robot
+from ann.Ann import Ann
 from robot_simulator.rooms import room_1
 from shapely.geometry import Point
+from ea.robot_evaluation import ann_structure
+
 
 is_running = True
 window_size = (900, 800)
@@ -185,3 +191,107 @@ def run(robot):
 
         clock.tick(60)
         pygame.display.update()
+
+
+
+def run_genotype(genotype, room, initial_pos):
+    
+    pygame.init()
+
+    # Create display
+    pygame.display.set_caption("Robot Simulator")
+    window_surface = pygame.display.set_mode(window_size)
+
+    # Create background
+    background = pygame.Surface(window_size)
+    background.fill(pygame.Color('#FFFFFF'))
+
+    clock = pygame.time.Clock()
+
+
+    new_room = copy.deepcopy(room)
+    dust = new_room[1]
+    
+    brain = Ann(ann_structure, genotype)
+    body = Robot(1, initial_pos, room, n_sensors=12)
+    delta_t = 4
+    max_vel = 20
+
+    
+    for i in range(200):
+
+
+        if i % delta_t == 0:
+            sensor_data = [sensor.sense_distance2() for sensor in body.sensors]
+            vel = brain.feedforward(sensor_data, brain.weights)
+            print(vel)
+            if vel[0] > 0:
+                body.set_vel_left(min(vel[0], max_vel))
+            else:
+                body.set_vel_left(max(vel[0], -max_vel))
+            if vel[1] > 0:
+                body.set_vel_right(min(vel[1], max_vel))
+            else:
+                body.set_vel_right(max(vel[1], -max_vel))
+
+        body.update_position()
+        robot_centre = Point(body.pos)
+
+        # Draw background, robot and walls
+        window_surface.blit(background, (0, 0))
+        
+        pygame.draw.circle(window_surface, "#000000", body.pos, robot_radius, width=robot_border_size)
+
+        robot_line_end = (body.pos[0] + robot_radius * math.cos(math.radians(body.theta))
+                          - robot_border_size * math.cos(math.radians(body.theta)),
+
+                          body.pos[1] + robot_radius * math.sin(math.radians(body.theta))
+                          - robot_border_size * math.sin(math.radians(body.theta)))
+
+        pygame.draw.line(window_surface, "#000000", body.pos, robot_line_end, width=2)
+        
+        for wall in walls:
+            pygame.draw.line(window_surface, "#000000", wall.coords[0], wall.coords[1], width=2)
+
+        font = pygame.font.Font(None, 20)
+
+        v_l_text = font.render(str(body.v_l), True, "#000000")
+        v_r_text = font.render(str(body.v_r), True, "#000000")
+
+        v_l_rectangle = v_l_text.get_rect()
+        v_l_rectangle.center = (
+            body.pos[0] + velocity_display_distance * math.cos(math.radians(body.theta - 90)),
+            body.pos[1] + velocity_display_distance * math.sin(math.radians(body.theta - 90))
+        )
+
+        v_r_rectangle = v_r_text.get_rect()
+        v_r_rectangle.center = (
+            body.pos[0] + velocity_display_distance * math.cos(math.radians(body.theta + 90)),
+            body.pos[1] + velocity_display_distance * math.sin(math.radians(body.theta + 90))
+        )
+
+        window_surface.blit(v_l_text, v_l_rectangle)
+        window_surface.blit(v_r_text, v_r_rectangle)
+
+        # Draw sensors. Each element in the list is a sensor. Each sensor is a tuple (angle, sensor value)
+        sensors = [(sensor.angle, sensor.sense_distance2(), sensor.p1, sensor.p2) for sensor in robot.sensors]
+
+        for sensor in sensors:
+
+            # This is temporary, just to show the lines of the sensor's detection range
+            # pygame.draw.line(window_surface, "#000000", sensor[2], sensor[3], width=2)
+
+            sensor_distance = font.render(str(round(sensor[1])), True, "#000000")
+
+            sensor_rectangle = sensor_distance.get_rect()
+            sensor_rectangle.center = (
+                body.pos[0] + sensor_display_distance * math.cos(math.radians(body.theta - 90 - sensor[0])),
+                body.pos[1] + sensor_display_distance * math.sin(math.radians(body.theta - 90 - sensor[0]))
+            )
+
+            window_surface.blit(sensor_distance, sensor_rectangle)
+
+        clock.tick(60)
+        pygame.display.update()
+
+    return None
