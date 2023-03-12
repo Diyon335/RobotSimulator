@@ -7,6 +7,7 @@ from robot_simulator.gui import robot_radius
 from ann.Ann import Ann
 
 import time
+import copy
 
 
 sigmoid_stretch = 0.5
@@ -26,7 +27,8 @@ def sigmoid(x):
 
 def evaluate_genotype(genotype, ind, room):
 
-    dust = room[1]
+    new_room = copy.deepcopy(room)
+    dust = new_room[1]
     
     start = time.time()
 

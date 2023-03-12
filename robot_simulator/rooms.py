@@ -103,6 +103,7 @@ room_1 = [walls_1, dust_1]
 total_dust_2 = sum([sum(row) for row in dust_2])
 room_2 = [walls_2, dust_2, total_dust_2]
 
+
 def generate_random_dust(amount_of_dust):
 
     for _ in range(amount_of_dust):
