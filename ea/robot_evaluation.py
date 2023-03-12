@@ -13,7 +13,7 @@ import copy
 
 sigmoid_stretch = 0.5
 
-itterations = 100
+itterations = 200
 ann_structure = [12, 3, 2]
 
 initial_pos = (450, 400)
@@ -116,5 +116,6 @@ def evaluate_genotype(genotype, ind, room):
     #print(dust_removed)
     print('dust fitness : ' + str(dust_removed/room[2]))
 
-
-    return (dust_removed / room[2]) - collision_counter
+    fitness = (dust_removed / room[2]) - sigmoid(collision_counter)
+    print('Fitness : ' + str(fitness))
+    return fitness
