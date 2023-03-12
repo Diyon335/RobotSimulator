@@ -167,9 +167,11 @@ def run_algorithm(room):
         print(f"Finished generation {i} in {end - start} seconds.\n "
               f"Max fitness: {max_fitness}\n "
               f"Avg. fitness: {avg_fitness}")
-
+        
         start = time.time()
-
+    
+    best_genotype = max(population_dictionary.values(), key=lambda x: x[1])
+    print(best_genotype)
     return max_fitness_history, avg_fitness_history
 
 
