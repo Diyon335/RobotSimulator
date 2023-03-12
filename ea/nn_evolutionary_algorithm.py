@@ -22,11 +22,11 @@ plot_directory = "plots/"
 phenotype_history = []
 population_dictionary = {}
 
-population_size = 50
+population_size = 40
 
-generations = 100
+generations = 20
 
-offsprings_per_generation = 30
+offsprings_per_generation = 25
 
 # Variables for the encoding strategy
 genotype_length = 210
@@ -35,10 +35,10 @@ genotype_max_range = 10
 whole_numbers = False
 
 # Variables for the selection strategy
-tournament_k = 6
+tournament_k = 8
 
 # Variables for the crossover/mutation strategies
-mutation_rate = 3
+mutation_rate = 10
 
 """
 IMPORTANT: 
