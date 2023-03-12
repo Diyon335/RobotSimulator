@@ -309,6 +309,12 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
     Initialises the data, and then runs evaluation, selection, reproduction and mutations for the specified amount
     of generations
 
+    :param mr: Integer for mutation rate
+    :param num_offspring: Integer for number of offspring per generation
+    :param k: Integer for tournament k
+    :param gens: Integer for number of generations
+    :param room: Room list
+
     :return: a max fitness array and an average fitness array, both of length equal to number of generations + 1
             (to include "generation 0" after initialisation but before any reproduction has taken place), containing
             max fitness and average fitness of the population at every generation
@@ -402,7 +408,20 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr):
 
 
 def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_offspring=offsprings_per_generation, mr=mutation_rate, tests=100):
+    """
+    Plots the average max fitness and average fitness from all run tests over a number of generations.
 
+    Plots contain error bars
+
+    :param room: Room list
+    :param gens: Integer for number of generations
+    :param k: Integer for tournament k
+    :param num_offspring: Integer for number of offspring per generation
+    :param mr: Integer for mutation rate
+    :param tests: Integer for number of tests
+    :return: None - saves figure
+    """
+    # Holds lists of max and avg fitness per run test
     max_fitness = []
     avg_fitness = []
 
@@ -421,12 +440,15 @@ def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_o
         max_fitness.append(max_fitness_history)
         avg_fitness.append(avg_fitness_history)
 
+    # Holds the average max fitness and average average fitness over all tests, per generation
     avg_max_fitness = []
     avg_avg_fitness = []
 
+    # Holds the errors
     max_fitness_error = []
     avg_fitness_error = []
 
+    # For each generation, go over all run tests and compute the average + errors
     for j in range(gens):
 
         total_max_fitness = []
@@ -445,6 +467,7 @@ def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_o
 
     generation_list = [gen for gen in range(gens)]
 
+    # Plot
     plt.errorbar(generation_list, avg_max_fitness, yerr=max_fitness_error, c='b', ls='-', fmt='.', label="Max Fitness")
     plt.errorbar(generation_list, avg_avg_fitness, yerr=avg_fitness_error, c='r', ls='-', fmt='.', label="Average Fitness")
 
@@ -453,5 +476,7 @@ def test_algorithm_with_parameters(room, gens=generations, k=tournament_k, num_o
 
     plt.xlim(0, gens)
     plt.legend(loc='lower right')
+
+    # Save
     plt.savefig(plot_directory+f"{gens}gens_{k}k_{mr}mr_{num_offspring}off_{tests}tests.png")
 
