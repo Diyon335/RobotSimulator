@@ -14,7 +14,6 @@ import copy
 
 from robot_simulator.robot import Robot
 from ann.Ann import Ann
-from robot_simulator.rooms import room_1
 from shapely.geometry import Point
 from ea.robot_evaluation import ann_structure
 from robot_simulator.robot import robot_radius
@@ -23,8 +22,6 @@ from robot_simulator.robot import robot_border_size
 
 is_running = True
 window_size = (900, 800)
-walls = room_1[0]
-dust = room_1[1]
 
 # Display the left and right wheel velocities a certain distance (pixels) away from the centre of the robot
 velocity_display_distance = 20
@@ -36,10 +33,11 @@ sensor_display_distance = 70
 velocity_change = 1
 
 
-def run(robot):
+def run(robot, room):
     """
     This runs the GUI for the robot simulator
 
+    :param room: Room list
     :param robot: A robot object
     :return: None
     """
@@ -56,7 +54,9 @@ def run(robot):
 
     clock = pygame.time.Clock()
 
-    global dust
+    walls = room[0]
+    dust = room[1]
+
     global is_running
     while is_running:
 

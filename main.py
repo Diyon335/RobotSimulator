@@ -7,10 +7,10 @@ Luca Forte (I6330944)
 Olmo Denegri (i6333396)
 Florent Didascalou (i6337071)
 """
-from robot_simulator.rooms import room_2, room_1
+from robot_simulator.rooms import room_2, room_1, room_3
 from ea.nn_evolutionary_algorithm import run_algorithm, test_algorithm_with_parameters
 from robot_simulator.robot import Robot
-from ann.Ann import Ann
+from robot_simulator import gui
 from robot_simulator.gui import run_genotype
 
 genotype_directory = "genotype_data/"
@@ -21,8 +21,7 @@ genotype = [5.752492608970092, 6.225355661031632, -7.349156605107501, -3.0639791
 
 if __name__ == '__main__':
 
-    # robot = Robot(1, robot_start, room_2, n_sensors=12)
-    # gui.run(robot)
+    room = room_3
 
     file_name = "test.txt"
     plot_name = "graph_for_test.png"
