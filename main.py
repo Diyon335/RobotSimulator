@@ -25,7 +25,7 @@ genotype = [5.752492608970092, 6.225355661031632, -7.349156605107501, -3.0639791
 
 if __name__ == '__main__':
 
-    room = room_6
+    room = room_3
 
     """
     Uncomment if you want to run tests
