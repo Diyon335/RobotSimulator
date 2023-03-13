@@ -47,6 +47,8 @@ if __name__ == '__main__':
 
     # run_genotype(genotype, room, robot_start)
 
+    #####################################################################
+
     """
     Uncomment if you want to manually drive the robot using the gui
     """
