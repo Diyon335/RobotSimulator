@@ -1,6 +1,7 @@
 from itertools import combinations
+import matplotlib.pyplot as plt
 
-f = open("tanh_run.txt", "r")
+f = open("run1_3tests.txt", "r")
 lines = f.readlines()
 
 diversity = []
@@ -26,3 +27,19 @@ for line in lines:
 
 print(len(diversity))
 print(diversity)
+
+div1 = diversity[:101]
+div2 = diversity[101:202]
+div3 = diversity[202:303]
+
+fin_div = []
+i = 0
+while i < len(div1):
+    fin_div.append(sum([div1[i], div2[i], div3[i]])/3)
+    i += 1
+
+plt.plot(fin_div)
+plt.xlabel("Generations")
+plt.ylabel("Diversity")
+plt.title("100 Generations, 3 Runs")
+plt.show()
