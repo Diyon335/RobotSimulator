@@ -76,13 +76,13 @@ class Ann:
         """
         i = 1
         weights = self.split_list(weights_lists[0], self.layers[0])
-        layer = self.sigmoid(np.dot(weights, real_input))
+        layer = np.tanh(np.dot(weights, real_input))
         while i < len(self.layers)-1:
             weights = self.split_list(weights_lists[i], self.layers[i])
-            layer = self.sigmoid(np.dot(weights, layer))
+            layer = np.tanh(np.dot(weights, layer))
             i += 1
         weights = self.split_list(weights_lists[i], self.layers[i])
-        layer = np.dot(weights, layer)
+        layer = np.tanh(np.dot(weights, layer))
         new_l = layer[0]
         new_r = layer[1]
         if new_l > 0:

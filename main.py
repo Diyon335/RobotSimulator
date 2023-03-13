@@ -8,7 +8,7 @@ Olmo Denegri (i6333396)
 Florent Didascalou (i6337071)
 """
 from robot_simulator.rooms import room_2, room_1, room_3, room_4, room_5, room_6
-from ea.nn_evolutionary_algorithm import run_algorithm, test_algorithm_with_parameters
+from ea.nn_evolutionary_algorithm import run_algorithm, test_algorithm_with_parameters, run_algorithm_with_parameters
 from robot_simulator.robot import Robot
 from robot_simulator import gui
 from robot_simulator.gui import run_genotype
@@ -31,14 +31,14 @@ if __name__ == '__main__':
     """
     Uncomment if you want to run tests
     """
-    file_name = "test.txt"
+    '''file_name = "test.txt"
     plot_name = "graph_for_test.png"
     
     file = open(genotype_directory+file_name, "w")
     
     test_algorithm_with_parameters(rooms, file, plot_name, tests=2)
     
-    file.close()
+    file.close()'''
 
     #####################################################################
 
@@ -56,5 +56,9 @@ if __name__ == '__main__':
 
     # robot = Robot(1, robot_start, room, n_sensors=12)
     # gui.run(robot, room, show_dust=False)
+
+    file = open("tanh_run", "w")
+
+    run_algorithm_with_parameters(rooms, 50, 10, 20, 10, file)
 
 

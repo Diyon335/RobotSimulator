@@ -19,7 +19,7 @@ ann_structure = [12, 3, 2]
 initial_pos = (450, 400)
 max_vel = 20
 
-delta_t = 8
+delta_t = 6
 
 
 def sigmoid(x):

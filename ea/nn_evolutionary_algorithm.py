@@ -22,7 +22,7 @@ plot_directory = "plots/"
 phenotype_history = []
 population_dictionary = {}
 
-population_size = 40
+population_size = 30
 
 generations = 100
 
@@ -35,10 +35,10 @@ genotype_max_range = 10
 whole_numbers = False
 
 # Variables for the selection strategy
-tournament_k = 8
+tournament_k = 6
 
 # Variables for the crossover/mutation strategies
-mutation_rate = 10
+mutation_rate = 5
 
 """
 IMPORTANT: 
@@ -483,6 +483,9 @@ def run_algorithm_with_parameters(rooms, gens, k, num_offspring, mr, file):
           f"{best_genotype}")
 
     file.write(f"The best genotype is: {best_genotype}")
+    file.write(f"\n")
+    file.write(f"{max_fitness_history}\n")
+    file.write(f"{avg_fitness_history}\n")
 
     return max_fitness_history, avg_fitness_history
 
