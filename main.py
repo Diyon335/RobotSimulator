@@ -25,19 +25,20 @@ genotype = [5.752492608970092, 6.225355661031632, -7.349156605107501, -3.0639791
 
 if __name__ == '__main__':
 
-    room = room_3
-
+    rooms = [room_3, room_4]
+    room = room_1
+    
     """
     Uncomment if you want to run tests
     """
-    # file_name = "test.txt"
-    # plot_name = "graph_for_test.png"
-    #
-    # file = open(genotype_directory+file_name, "w")
-    #
-    # test_algorithm_with_parameters(room, file, plot_name, tests=2)
-    #
-    # file.close()
+    file_name = "test.txt"
+    plot_name = "graph_for_test.png"
+    
+    file = open(genotype_directory+file_name, "w")
+    
+    test_algorithm_with_parameters(rooms, file, plot_name, tests=2)
+    
+    file.close()
 
     #####################################################################
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     Uncomment if you want to manually drive the robot using the gui
     """
 
-    robot = Robot(1, robot_start, room, n_sensors=12)
-    gui.run(robot, room, show_dust=False)
+    # robot = Robot(1, robot_start, room, n_sensors=12)
+    # gui.run(robot, room, show_dust=False)
 
 

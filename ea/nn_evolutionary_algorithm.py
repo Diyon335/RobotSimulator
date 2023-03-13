@@ -75,6 +75,31 @@ def initialise(room):
 
         population_dictionary[individual] = [genotype, evaluate_genotype(genotype, individual, room)]
 
+def initialise_rooms(rooms):
+    """
+    This function populates the population dictionary by using the specified encoding strategy.
+    Each individual has a key (integer), a genotype array and a fitness.
+
+    The dictionary will be of the form:
+
+    key : value
+    int : [[list], int]
+    <ID> : [genotype], fitness
+
+    :return: none
+    """
+
+    # generation = []
+    for individual in range(population_size):
+
+        genotype = encoding_strategy(genotype_length, genotype_min_range, genotype_max_range, integers=whole_numbers)
+
+        fitness = 0
+        for room in rooms:
+            print("Room: " + str(room[2]))
+            fitness += evaluate_genotype(genotype, individual, room)
+
+        population_dictionary[individual] = [genotype, fitness / len(rooms)]
 
 def run_algorithm(room, file):
     """
@@ -335,7 +360,7 @@ def testing_routine(parameter_set, parameter, room, tests=100, short=False):
     return results
 
 
-def run_algorithm_with_parameters(room, gens, k, num_offspring, mr, file):
+def run_algorithm_with_parameters(rooms, gens, k, num_offspring, mr, file):
     """
     This function allows the value of parameters to be changed by passing in values
 
@@ -366,7 +391,7 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr, file):
                f"k: {k}\n"
                f"mutation rate: {mr}\n\n")
 
-    initialise(room)
+    initialise_rooms(rooms)
 
     print(f"Done initialising in {time.time() - start} seconds")
 
@@ -427,8 +452,10 @@ def run_algorithm_with_parameters(room, gens, k, num_offspring, mr, file):
         for offspring in offspring_dictionary:
 
             genotype = offspring_dictionary[offspring][0]
-
-            offspring_dictionary[offspring][1] = evaluate_genotype(genotype, offspring, room)
+            fitness = 0
+            for room in rooms:
+                fitness += evaluate_genotype(genotype, offspring, room)
+            offspring_dictionary[offspring][1] = fitness / len(rooms)
 
         reproduction_strategy(population_dictionary, offspring_dictionary)
 
