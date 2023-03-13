@@ -21,7 +21,13 @@ for i in range(860):
     row[i] = 1 if i > 15 and i % 15 == 0 else 0
 
 for i in range(780):
-    dust[i] = zero_rows if i < 21 else copy.deepcopy(row)
+    if i < 21:
+        dust[i] = zero_rows
+    else:
+        if i % 15 == 0:
+            dust[i] = copy.deepcopy(row)
+        else:
+            dust[i] = zero_rows
 
 total_dust = sum([sum(row) for row in dust])
 
@@ -145,7 +151,7 @@ walls_4 = [
 
 ]
 
-room_4 = [walls_4, dust, total_dust]
+room_4 = [walls_4, dust, 1488]
 
 ####################################################
 
@@ -171,7 +177,7 @@ walls_5 = [
     LineString([(714, 515), (860, 400)]),
 ]
 
-room_5 = [walls_5, dust, total_dust]
+room_5 = [walls_5, dust, 2538]
 
 ####################################################
 
@@ -188,7 +194,7 @@ walls_6 = [
     LineString([(638, 340), (441, 20)]),
 ]
 
-room_6 = [walls_6, dust, total_dust]
+room_6 = [walls_6, dust, 1107]
 
 
 def generate_random_dust(amount_of_dust):
