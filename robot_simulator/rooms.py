@@ -13,6 +13,18 @@ If you are creating a new room, make sure to run this file first
 6) Run main.py again
 """
 
+dust = [None for i in range(780)]
+zero_rows = [0 for _ in range(860)]
+row = [0 for _ in range(860)]
+
+for i in range(860):
+    row[i] = 1 if i > 15 and i % 15 == 0 else 0
+
+for i in range(780):
+    dust[i] = zero_rows if i < 21 else copy.deepcopy(row)
+
+total_dust = sum([sum(row) for row in dust])
+
 walls_1 = [
     # Standard walls
     LineString([(860, 20), (15, 20)]),
@@ -81,7 +93,7 @@ dust_1 = [
     Point((421, 179)),
 ]
 
-room_1 = [walls_1, dust_1]
+room_1 = [walls_1, dust, total_dust]
 
 ####################################################
 
@@ -92,19 +104,7 @@ walls_2 = [
     LineString([(860, 780), (860, 20)]),
 ]
 
-dust_2 = [None for i in range(780)]
-zero_rows = [0 for i in range(860)]
-row = [0 for i in range(860)]
-
-for i in range(860):
-    row[i] = 1 if i > 15 and i % 15 == 0 else 0
-
-for i in range(780):
-    dust_2[i] = zero_rows if i < 21 else copy.deepcopy(row)
-
-total_dust_2 = sum([sum(row) for row in dust_2])
-
-room_2 = [walls_2, dust_2, total_dust_2]
+room_2 = [walls_2, dust, total_dust]
 
 ####################################################
 
@@ -120,16 +120,76 @@ walls_3 = [
     LineString([(725, 170), (750, 218)]),
     LineString([(175, 170), (725, 170)]),
 
-    LineString([(150, 650), (175, 650)]),
-    LineString([(750, 218), (150, 218)]),
-    LineString([(725, 170), (750, 218)]),
-    LineString([(175, 700), (725, 700)]),
+    LineString([(725, 700), (175, 700)]),
+    LineString([(150, 650), (750, 650)]),
+    LineString([(175, 700), (150, 650)]),
+    LineString([(750, 650), (725, 700)]),
+
+    LineString([(230, 340), (230, 460)]),
+    LineString([(195, 490), (195, 310)]),
+    LineString([(195, 310), (230, 340)]),
+    LineString([(230, 460), (195, 490)])
 
 ]
 
-room_3 = [walls_3, []]
+room_3 = [walls_3, dust, total_dust]
 
 ####################################################
+
+walls_4 = [
+    # Standard walls
+    LineString([(422, 20), (15, 780)]),
+    LineString([(860, 780), (422, 20)]),
+    LineString([(15, 780), (860, 780)]),
+
+
+]
+
+room_4 = [walls_4, dust, total_dust]
+
+####################################################
+
+walls_5 = [
+    # Standard walls
+    LineString([(860, 20), (15, 20)]),
+    LineString([(15, 20), (15, 780)]),
+    LineString([(15, 780), (860, 780)]),
+    LineString([(860, 780), (860, 20)]),
+
+    LineString([(170, 210), (231, 151)]),
+    LineString([(231, 151), (290, 210)]),
+    LineString([(290, 210), (230, 290)]),
+    LineString([(230, 290), (170, 210)]),
+
+    LineString([(788, 225), (860, 157)]),
+    LineString([(860, 257), (788, 225)]),
+
+    LineString([(200, 780), (200, 480)]),
+    LineString([(200, 480), (450, 780)]),
+
+    LineString([(860, 780), (714, 515)]),
+    LineString([(714, 515), (860, 400)]),
+]
+
+room_5 = [walls_5, dust, total_dust]
+
+####################################################
+
+walls_6 = [
+    LineString([(441, 20), (244, 340)]),
+    LineString([(244, 340), (15, 340)]),
+    LineString([(15, 340), (244, 523)]),
+    LineString([(244, 523), (135, 780)]),
+    LineString([(135, 780), (441, 585)]),
+    LineString([(441, 585), (747, 780)]),
+    LineString([(747, 780), (638, 523)]),
+    LineString([(638, 523), (860, 340)]),
+    LineString([(860, 340), (638, 340)]),
+    LineString([(638, 340), (441, 20)]),
+]
+
+room_6 = [walls_6, dust, total_dust]
+
 
 def generate_random_dust(amount_of_dust):
 
@@ -138,7 +198,4 @@ def generate_random_dust(amount_of_dust):
 
 
 if __name__ == '__main__':
-    #generate_random_dust(50)
-    #print(dust_2)
-    print(len(dust_2))
-    #print(len(dust_2[0]))
+    print(len(dust))

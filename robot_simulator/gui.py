@@ -14,7 +14,6 @@ import copy
 
 from robot_simulator.robot import Robot
 from ann.Ann import Ann
-from shapely.geometry import Point
 from ea.robot_evaluation import ann_structure
 from robot_simulator.robot import robot_radius
 from robot_simulator.robot import robot_border_size
@@ -33,10 +32,11 @@ sensor_display_distance = 70
 velocity_change = 1
 
 
-def run(robot, room):
+def run(robot, room, show_dust=False):
     """
     This runs the GUI for the robot simulator
 
+    :param show_dust: A boolean to show the dust
     :param room: Room list
     :param robot: A robot object
     :return: None
@@ -103,7 +103,6 @@ def run(robot, room):
                     robot.v_r -= velocity_change
 
         robot.update_position()
-        robot_centre = Point(robot.pos)
 
         # Draw background, robot and walls
         window_surface.blit(background, (0, 0))
@@ -123,31 +122,34 @@ def run(robot, room):
 
         font = pygame.font.Font(None, 20)
 
-        # Plot the dust particles. If the dust particle lies within the circle, i.e. the dust particle's centre
-        # is within the radius of the robot, it is collected by the robot and not plotted
-        to_remove = []
-        for particle in dust:
-            x, y = particle.x, particle.y
-            particle_pos = Point((x, y))
+        if show_dust:
+            x, y = robot.pos
+            x, y = int(x), int(y)
 
-            if robot_centre.distance(particle_pos) <= robot_radius:
-                to_remove.append(particle)
-            else:
-                pygame.draw.circle(window_surface, "#FF0000", (particle.x, particle.y), 5)
+            x_min = max(x - robot_radius, 15)
+            x_max = min(x + robot_radius, len(dust[0]))
+            y_min = max(y - robot_radius, 20)
+            y_max = min(y + robot_radius, len(dust))
 
-        for particle in to_remove:
-            dust.remove(particle)
+            for j in range(y_min, y_max):
+                for k in range(x_min, x_max):
+                    if dust[j][k] == 1:
+                        dust[j][k] = 0
+                        robot.dust += 1
 
-        robot.dust += len(to_remove)
+            for j in range(len(dust)):
+                for k in range(len(dust[0])):
+                    if dust[j][k] == 1:
+                        pygame.draw.circle(window_surface, "#FF0000", (k, j), 2)
 
-        # Plot the dust particle counter
-        dust_text = font.render(str(robot.dust), True, "#FF0000")
-        dust_rectangle = dust_text.get_rect()
-        dust_rectangle.center = (
-            robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 180)),
-            robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 180))
-        )
-        window_surface.blit(dust_text, dust_rectangle)
+            # Plot the dust particle counter
+            dust_text = font.render(str(robot.dust), True, "#FF0000")
+            dust_rectangle = dust_text.get_rect()
+            dust_rectangle.center = (
+                robot.pos[0] + velocity_display_distance * math.cos(math.radians(robot.theta - 180)),
+                robot.pos[1] + velocity_display_distance * math.sin(math.radians(robot.theta - 180))
+            )
+            window_surface.blit(dust_text, dust_rectangle)
 
         # Plot the wheel velocities
         v_l_text = font.render(str(robot.v_l), True, "#000000")
@@ -267,8 +269,8 @@ def run_genotype(genotype, room, initial_pos):
                 if dust[j][k] == 1:
                     pygame.draw.circle(window_surface, "#FF0000", (k, j), 2)
 
-        v_l_text = font.render(str(body.v_l), True, "#000000")
-        v_r_text = font.render(str(body.v_r), True, "#000000")
+        v_l_text = font.render(str(round(body.v_l, 2)), True, "#000000")
+        v_r_text = font.render(str(round(body.v_r, 2)), True, "#000000")
 
         v_l_rectangle = v_l_text.get_rect()
         v_l_rectangle.center = (
