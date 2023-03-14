@@ -1,7 +1,7 @@
 from itertools import combinations
 import matplotlib.pyplot as plt
 
-f = open("run1_3tests.txt", "r")
+f = open("rooms14_100gens_6k_5mr_30pop_25off.txt", "r")
 lines = f.readlines()
 
 diversity = []
