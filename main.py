@@ -12,11 +12,13 @@ from ea.nn_evolutionary_algorithm import run_algorithm, test_algorithm_with_para
 from robot_simulator.robot import Robot
 from robot_simulator import gui
 from robot_simulator.gui import run_genotype
+from robot_localisation import localisation_gui
+from robot_localisation.mobile_robot import Robot as MobileRobot
 
 genotype_directory = "genotype_data/"
 
 # Where to place the robot at the start
-robot_start = (450, 400)
+robot_start = (100, 98)
 
 """
 REPLACE THIS WITH THE BEST GENOTYPE OBTAINED AFTER YOUR TESTS
@@ -31,14 +33,14 @@ if __name__ == '__main__':
     """
     Uncomment if you want to run tests
     """
-    '''file_name = "test.txt"
-    plot_name = "graph_for_test.png"
-    
-    file = open(genotype_directory+file_name, "w")
-    
-    test_algorithm_with_parameters(rooms, file, plot_name, tests=2)
-    
-    file.close()'''
+    # file_name = "test.txt"
+    # plot_name = "graph_for_test.png"
+    #
+    # file = open(genotype_directory+file_name, "w")
+    #
+    # test_algorithm_with_parameters(rooms, file, plot_name, tests=2)
+    #
+    # file.close()
 
     #####################################################################
 
@@ -57,8 +59,10 @@ if __name__ == '__main__':
     # robot = Robot(1, robot_start, room, n_sensors=12)
     # gui.run(robot, room, show_dust=False)
 
-    file = open("tanh_run", "w")
+    """
+    Uncomment if you want to see robot localisation
+    """
 
-    run_algorithm_with_parameters(rooms, 50, 10, 20, 10, file)
-
+    robot = MobileRobot(robot_start, 200)
+    localisation_gui.run(robot)
 
