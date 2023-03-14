@@ -1,6 +1,8 @@
 from itertools import combinations
 import matplotlib.pyplot as plt
 
+# write here the filename of the txt experiment report to analyze
+# the code is set up to handle simple reports of 3 runs of 100 generations each
 f = open("rooms14_100gens_6k_5mr_30pop_25off.txt", "r")
 lines = f.readlines()
 
@@ -24,9 +26,6 @@ for line in lines:
         genotype = True
         if ": 0" in line:
             diversity.append([])
-
-print(len(diversity))
-print(diversity)
 
 div1 = diversity[:101]
 div2 = diversity[101:202]
