@@ -1,26 +1,24 @@
 import pygame
 import numpy as np
 from robot_localisation.mobile_robot import robot_radius, robot_border_size
-from robot_localisation.room import room
 
 
 is_running = True
 window_size = (900, 800)
 
-velocity_change = 1
+velocity_change = 0.5
 
 # 1 degree
 omega_change = 0.017
 
 feature_radius = 10
-walls = room[0]
-features = room[1]
 
 
-def run(robot):
+def run(robot, room):
     """
     This runs the GUI for the robot localiser
 
+    :param room: Room list with walls and features
     :param robot: A robot object
     :return: None
     """
@@ -36,6 +34,9 @@ def run(robot):
     background.fill(pygame.Color('#FFFFFF'))
 
     clock = pygame.time.Clock()
+
+    walls = room[0]
+    features = room[1]
 
     global is_running
     while is_running:
@@ -72,12 +73,12 @@ def run(robot):
                     robot.velocity = 0
                     robot.omega = 0
 
-        robot.update_position()
+        pos, predicted_pos, predicted_cov, corrected_pos = robot.update_position()
 
         # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
 
-        pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
+        pygame.draw.circle(window_surface, "#000000", pos, robot_radius, width=robot_border_size)
 
         robot_line_end = (robot.pos[0] + robot_radius * np.cos(robot.theta)
                           - robot_border_size * np.cos(robot.theta),
@@ -86,6 +87,9 @@ def run(robot):
                           - robot_border_size * np.sin(robot.theta))
 
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
+
+        pygame.draw.circle(window_surface, "#FF0000", corrected_pos, 2)
+        pygame.draw.circle(window_surface, "#008000", predicted_pos, 2)
 
         for feature in features:
             pygame.draw.circle(window_surface, "#000000", feature, feature_radius)
@@ -97,7 +101,7 @@ def run(robot):
         for wall in walls:
             pygame.draw.line(window_surface, "#000000", wall[0], wall[1], width=2)
 
-        clock.tick(60)
+        clock.tick(1)
         pygame.display.update()
 
 

@@ -13,6 +13,9 @@ r_x, r_y, r_theta = 1, 1, 0.1
 ##### ROBOT POSE ERRORS ####
 pose_x, pose_y, pose_theta = 0.01, 0.01, 0.01
 
+#### ROBOT SENSOR ERRORS ####
+sensor_x, sensor_y, sensor_theta = 1, 1, 0.01
+
 # Covariance matrix for motion model errors
 R = np.matrix([
     [r_x ** 2, 0, 0],
@@ -20,11 +23,20 @@ R = np.matrix([
     [0, 0, r_theta ** 2]
 ])
 
+# Covariance matrix for sensor errors
+Q = np.matrix([
+    [sensor_x ** 2, 0, 0],
+    [0, sensor_y ** 2, 0],
+    [0, 0, sensor_theta ** 2]
+])
+
 # How the state evolves from t-1 -> t, without controls/noise
 A = np.identity(3)
 
 # How to map state to observation
 C = np.identity(3)
+
+horizontal_vector = [1, 0]
 
 
 def distance_to_feature(robot_pos, feature_pos):
@@ -40,6 +52,32 @@ def distance_to_feature(robot_pos, feature_pos):
     x2, y2 = feature_pos
 
     return np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+
+def feature_inclination(feature_vector: list):
+
+    feature_points_up = feature_vector[1] > 0
+
+    unit_vector_1 = horizontal_vector / np.linalg.norm(horizontal_vector)
+    unit_vector_2 = feature_vector / np.linalg.norm(feature_vector)
+    dot_product = np.dot(unit_vector_1, unit_vector_2)
+
+    angle = np.arccos(dot_product) if feature_points_up else -np.arccos(dot_product)
+
+    return angle
+
+
+def bearing_to_feature(heading_vector: list, feature_vector: list):
+
+    feature_points_up = feature_vector[1] > 0
+
+    unit_vector_1 = heading_vector / np.linalg.norm(heading_vector)
+    unit_vector_2 = feature_vector / np.linalg.norm(feature_vector)
+    dot_product = np.dot(unit_vector_1, unit_vector_2)
+
+    angle = np.arccos(dot_product) if feature_points_up else -np.arccos(dot_product)
+
+    return angle
 
 
 class Robot:
@@ -63,6 +101,13 @@ class Robot:
 
         self.features = room[1]
 
+        # Initial state is known pose
+        self.state = np.matrix([
+            [self.pos[0]],
+            [self.pos[1]],
+            [self.theta]
+        ])
+
         # Covariance matrix for pose error
         self.sigma = np.matrix([
             [pose_x ** 2, 0, 0],
@@ -70,28 +115,33 @@ class Robot:
             [0, 0, pose_theta ** 2]
         ])
 
-    def update_position(self, dt=1, kf=False):
+    def update_position(self, dt=1):
         """
         Updates the robot's position over time, dt
 
-        :param kf: If true, return predicted and corrected positions, along with the covariance matrix sigma
         :param dt: Integer indicating the size of the time step
         :return: None
         """
 
         x, y, theta = self.calculate_position(dt)
-
-        if kf:
-
-            predicted_pos, corrected_pos, covariance = self.kalman_filter(dt)
-
-            self.pos = x, y
-            self.theta = theta
-
-            return predicted_pos, corrected_pos, covariance
+        predicted_pos, predicted_cov, corrected_pos, corrected_cov = self.kalman_filter(dt)
 
         self.pos = x, y
         self.theta = theta
+
+        self.state = corrected_pos
+        self.sigma = corrected_cov
+
+        pos = (x, y)
+        predicted_pos = (predicted_pos.item(0, 0), predicted_pos.item(1, 0))
+        predicted_cov = (predicted_cov.item(0, 0), predicted_cov.item(1, 0))
+        corrected_pos = (corrected_pos.item(0, 0), corrected_pos.item(1, 0))
+
+        print(f"The new position of the robot: {self.pos}")
+        print(f"The new state of the robot: {corrected_pos}")
+        print(f"The predicted state of the robot: {predicted_pos}\n--------")
+
+        return pos, predicted_pos, predicted_cov, corrected_pos
 
     def calculate_position(self, dt):
 
@@ -129,36 +179,89 @@ class Robot:
 
         #### PREDICTION ####
 
-        # Current pose
-        current_position = np.matrix([
-            [self.pos[0]],
-            [self.pos[1]],
-            [self.theta]
-        ])
-
         # Control
-        u = np.matrix([
+        control = np.matrix([
             [self.velocity],
             [self.omega]
         ])
 
         # Matrix describing how control changes pose from t-1 -> t
         B = np.matrix([
-            [dt * np.cos(self.theta), 0],
-            [dt * np.sin(self.theta), 0],
+            [dt * np.cos(self.state.item(2, 0)), 0],
+            [dt * np.sin(self.state.item(2, 0)), 0],
             [0, dt]
         ])
 
-        predicted_position = (A * current_position) + (B * u)
+        predicted_position = (A * self.state) + (B * control)
 
         predicted_sigma = (A * self.sigma * np.transpose(A)) + R
 
+        print(f"\nThe current state is: \n{self.state}")
+
         #### CORRECTION ####
 
+        observation = self.get_observation()
+        print(f"\nThe observation is: \n{observation}")
 
+        C_T = np.transpose(C)
+        kalman_gain = predicted_sigma * C_T * np.linalg.inv((C * predicted_sigma * C_T) + Q)
+        corrected_position = predicted_position + (kalman_gain * (observation - (C * predicted_position)))
 
+        print(f"\nCorrection position by KF:\n{corrected_position}")
 
+        corrected_sigma = (np.identity(3) - (kalman_gain * C)) * predicted_sigma
 
+        return predicted_position, predicted_sigma, corrected_position, corrected_sigma
 
+    def get_observation(self):
+        """
+        Get the pose based on observed features, using triangulation
 
+        :return: Returns a np matrix containing average, x y and theta
+        """
 
+        state_x, state_y, state_theta = self.state.item(0, 0), self.state.item(1, 0), self.state.item(2, 0)
+
+        heading_vector = [robot_radius * np.cos(state_theta), robot_radius * np.sin(state_theta)]
+
+        # These hold the estimated pose for each feature
+        x, y, theta = [], [], []
+
+        for feature in self.features:
+
+            distance = distance_to_feature((state_x, state_y), feature)
+
+            if distance < robot_radius + self.sensor_range:
+
+                feature_vector = [feature[0] - state_x, feature[1] - state_y]
+
+                alpha = bearing_to_feature(heading_vector, feature_vector)
+                beta = feature_inclination(feature_vector)
+
+                corrected_x = feature[0] - distance * np.cos(alpha)
+                corrected_y = feature[1] - distance * np.sin(alpha)
+                corrected_theta = alpha - beta
+
+                print(f"Feature {feature} suggests the robot is at:\n"
+                      f"{corrected_x}, {corrected_y} with angle: {np.degrees(corrected_theta)}")
+
+                x.append(corrected_x)
+                y.append(corrected_y)
+                theta.append(corrected_theta)
+
+        x_avg, y_avg, theta_avg = np.mean(x), np.mean(y), np.mean(theta)
+        error_x, error_y, error_theta = np.random.normal(0, scale=sensor_x),\
+                                        np.random.normal(0, scale=sensor_y), \
+                                        np.random.normal(0, scale=sensor_theta)
+
+        print(f"The avg pose: {x_avg, y_avg, np.degrees(theta_avg)}")
+
+        print(f"Errors on pose: {error_x, error_y, np.degrees(error_theta)}")
+
+        observation = np.matrix([
+            [x_avg + error_x],
+            [y_avg + error_y],
+            [theta_avg + error_theta]
+        ])
+
+        return observation
