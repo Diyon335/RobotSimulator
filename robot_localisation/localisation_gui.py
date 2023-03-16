@@ -101,7 +101,7 @@ def run(robot, room):
         for wall in walls:
             pygame.draw.line(window_surface, "#000000", wall[0], wall[1], width=2)
 
-        clock.tick(1)
+        clock.tick(60)
         pygame.display.update()
 
 
