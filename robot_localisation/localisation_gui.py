@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 from robot_localisation.mobile_robot import robot_radius, robot_border_size
+from robot_localisation.room import room
 
 
 is_running = True
@@ -12,17 +13,8 @@ velocity_change = 1
 omega_change = 0.017
 
 feature_radius = 10
-features = [
-    (65, 326),
-    (85, 438),
-    (144, 599),
-    (296, 716),
-    (491, 732),
-    (694, 651),
-    (763, 492),
-    (786, 268),
-    (793, 165)
-]
+walls = room[0]
+features = room[1]
 
 
 def run(robot):
@@ -82,7 +74,7 @@ def run(robot):
 
         robot.update_position()
 
-        # Draw background, robot and features
+        # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
 
         pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
@@ -98,8 +90,12 @@ def run(robot):
         for feature in features:
             pygame.draw.circle(window_surface, "#000000", feature, feature_radius)
 
+            # If robot is close enough, draw green line
             if distance_to_feature(robot.pos, feature) < robot_radius + robot.sensor_range:
                 pygame.draw.line(window_surface, "#008000", robot.pos, feature, width=2)
+
+        for wall in walls:
+            pygame.draw.line(window_surface, "#000000", wall[0], wall[1], width=2)
 
         clock.tick(60)
         pygame.display.update()
