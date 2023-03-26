@@ -13,6 +13,8 @@ omega_change = 0.017
 
 feature_radius = 10
 
+line_limit = 1000
+
 
 def run(robot, room):
     """
@@ -37,6 +39,9 @@ def run(robot, room):
 
     walls = room[0]
     features = room[1]
+
+    predicted_path = []
+    i = 0
 
     global is_running
     while is_running:
@@ -73,7 +78,8 @@ def run(robot, room):
                     robot.velocity = 0
                     robot.omega = 0
 
-        pos, predicted_pos, predicted_cov, corrected_pos = robot.update_position()
+        pos, predicted_pos, predicted_cov, _ = robot.update_position()
+        predicted_path.append(predicted_pos)
 
         # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
@@ -88,9 +94,18 @@ def run(robot, room):
 
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
-        pygame.draw.circle(window_surface, "#FF0000", corrected_pos, 2)
-        pygame.draw.circle(window_surface, "#008000", predicted_pos, 2)
+        # Draw the estimated covariance ellipse
+        rect_centre = (predicted_pos[0] - predicted_cov[0]/2, predicted_pos[1] - predicted_cov[1]/2)
 
+        print(f"RECT CENTRE: {rect_centre}")
+        print(f"COV: {predicted_cov}")
+        pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, predicted_cov), width=2)
+
+        # Draw the predicted path
+        if i > 1:
+            pygame.draw.lines(window_surface, "#008000", False, predicted_path, 2)
+
+        # Draw features
         for feature in features:
             pygame.draw.circle(window_surface, "#000000", feature, feature_radius)
 
@@ -103,6 +118,13 @@ def run(robot, room):
 
         clock.tick(60)
         pygame.display.update()
+
+        i += 1
+
+        # If the predicted path list has more than the set limit, reset i and clear the list
+        if i > line_limit:
+            i = 0
+            predicted_path.clear()
 
 
 def distance_to_feature(robot_pos, feature_pos):

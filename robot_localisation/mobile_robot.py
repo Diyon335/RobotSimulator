@@ -133,15 +133,17 @@ class Robot:
         self.sigma = corrected_cov
 
         pos = (x, y)
-        predicted_pos = (predicted_pos.item(0, 0), predicted_pos.item(1, 0))
-        predicted_cov = (predicted_cov.item(0, 0), predicted_cov.item(1, 0))
-        corrected_pos = (corrected_pos.item(0, 0), corrected_pos.item(1, 0))
+        pred_pos = (predicted_pos.item(0, 0), predicted_pos.item(1, 0))
+        pred_cov = (predicted_cov.item(0, 0), predicted_cov.item(1, 1))
+        corr_pos = (corrected_pos.item(0, 0), corrected_pos.item(1, 0))
 
         print(f"The new position of the robot: {self.pos}")
-        print(f"The new state of the robot: {corrected_pos}")
-        print(f"The predicted state of the robot: {predicted_pos}\n--------")
+        print(f"The new state of the robot: {corr_pos}")
+        print(f"The predicted state of the robot: {pred_pos}")
+        print(f"The predicted covariance:\n{predicted_cov}")
+        print(f"The new covariance:\n{corrected_cov}\n---------------")
 
-        return pos, predicted_pos, predicted_cov, corrected_pos
+        return pos, pred_pos, pred_cov, corr_pos
 
     def calculate_position(self, dt):
 
