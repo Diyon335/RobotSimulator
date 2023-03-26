@@ -14,6 +14,7 @@ from robot_simulator import gui
 from robot_simulator.gui import run_genotype
 from robot_localisation import localisation_gui
 from robot_localisation.mobile_robot import Robot as MobileRobot
+from robot_localisation.room import room as feature_room
 
 genotype_directory = "genotype_data/"
 
@@ -63,6 +64,6 @@ if __name__ == '__main__':
     Uncomment if you want to see robot localisation
     """
 
-    robot = MobileRobot(robot_start, 200)
-    localisation_gui.run(robot)
+    robot = MobileRobot(robot_start, 200, feature_room)
+    localisation_gui.run(robot, feature_room, clear_paths=False)
 

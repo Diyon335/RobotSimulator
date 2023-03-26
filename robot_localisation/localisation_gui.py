@@ -6,29 +6,23 @@ from robot_localisation.mobile_robot import robot_radius, robot_border_size
 is_running = True
 window_size = (900, 800)
 
-velocity_change = 1
+velocity_change = 0.5
 
 # 1 degree
 omega_change = 0.017
 
 feature_radius = 10
-features = [
-    (65, 326),
-    (85, 438),
-    (144, 599),
-    (296, 716),
-    (491, 732),
-    (694, 651),
-    (763, 492),
-    (786, 268),
-    (793, 165)
-]
+
+line_limit = 1000
 
 
-def run(robot):
+def run(robot, room, clear_paths=False):
     """
     This runs the GUI for the robot localiser
 
+    :param clear_paths: Boolean. Indicates whether the drawn paths should be cleared after the path lists have exceeded
+    their limit
+    :param room: Room list with walls and features
     :param robot: A robot object
     :return: None
     """
@@ -44,6 +38,13 @@ def run(robot):
     background.fill(pygame.Color('#FFFFFF'))
 
     clock = pygame.time.Clock()
+
+    walls = room[0]
+    features = room[1]
+
+    predicted_path = []
+    robot_path = []
+    i = 0
 
     global is_running
     while is_running:
@@ -80,12 +81,14 @@ def run(robot):
                     robot.velocity = 0
                     robot.omega = 0
 
-        robot.update_position()
+        pos, predicted_pos, predicted_cov, _ = robot.update_position()
+        predicted_path.append(predicted_pos)
+        robot_path.append(pos)
 
-        # Draw background, robot and features
+        # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
 
-        pygame.draw.circle(window_surface, "#000000", robot.pos, robot_radius, width=robot_border_size)
+        pygame.draw.circle(window_surface, "#000000", pos, robot_radius, width=robot_border_size)
 
         robot_line_end = (robot.pos[0] + robot_radius * np.cos(robot.theta)
                           - robot_border_size * np.cos(robot.theta),
@@ -95,14 +98,41 @@ def run(robot):
 
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
+        # Draw the estimated covariance ellipse
+        rect_centre = (predicted_pos[0] - predicted_cov[0]/2, predicted_pos[1] - predicted_cov[1]/2)
+
+        print(f"RECT CENTRE: {rect_centre}")
+        print(f"COV: {predicted_cov}")
+        pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, predicted_cov), width=2)
+
+        # Draw the predicted path and robot's path
+        if i > 1:
+            pygame.draw.lines(window_surface, "#000000", False, robot_path, 2)
+            pygame.draw.lines(window_surface, "#008000", False, predicted_path, 2)
+
+        # Draw features
         for feature in features:
             pygame.draw.circle(window_surface, "#000000", feature, feature_radius)
 
+            # If robot is close enough, draw green line
             if distance_to_feature(robot.pos, feature) < robot_radius + robot.sensor_range:
                 pygame.draw.line(window_surface, "#008000", robot.pos, feature, width=2)
 
+        for wall in walls:
+            pygame.draw.line(window_surface, "#000000", wall[0], wall[1], width=2)
+
         clock.tick(60)
         pygame.display.update()
+
+        i += 1
+
+        # If the predicted path list has more than the set limit, reset i and clear the list
+        if i > line_limit:
+            i = 0
+
+            if clear_paths:
+                predicted_path.clear()
+                robot_path.clear()
 
 
 def distance_to_feature(robot_pos, feature_pos):
