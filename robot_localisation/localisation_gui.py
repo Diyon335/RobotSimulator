@@ -16,7 +16,7 @@ feature_radius = 10
 line_limit = 1000
 
 
-def run(robot, room, clear_paths=False):
+def run(robot, room, preset_path, clear_paths=False):
     """
     This runs the GUI for the robot localiser
 
@@ -92,8 +92,9 @@ def run(robot, room, clear_paths=False):
                     robot.velocity = 0
                     robot.omega = 0
 
-        robot.omega += omega_changes[j]
-        j +=1
+        if preset_path == True:
+            robot.omega += omega_changes[j]
+            j +=1
         pos, predicted_pos, predicted_cov, _ = robot.update_position()
         predicted_path.append(_)
         robot_path.append(pos)
