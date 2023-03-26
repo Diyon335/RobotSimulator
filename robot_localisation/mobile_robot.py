@@ -11,7 +11,7 @@ The following values are for the values of noise
 r_x, r_y, r_theta = 1, 1, 0.1
 
 ##### CONTROL ERRORS #####
-e_vel, e_omega = 0.5, 0.1
+e_vel, e_omega = 0.5, 0.03
 
 ##### ROBOT POSE ERRORS ####
 pose_x, pose_y, pose_theta = 0.01, 0.01, 0.01
@@ -192,8 +192,8 @@ class Robot:
 
 
         control = np.matrix([
-            [self.velocity],
-            [self.omega]
+            [self.velocity + error_vel],
+            [self.omega + error_omega]
         ])
 
         # Matrix describing how control changes pose from t-1 -> t
