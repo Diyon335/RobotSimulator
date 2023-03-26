@@ -82,7 +82,7 @@ def run(robot, room, clear_paths=False):
                     robot.omega = 0
 
         pos, predicted_pos, predicted_cov, _ = robot.update_position()
-        predicted_path.append(predicted_pos)
+        predicted_path.append(_)
         robot_path.append(pos)
 
         # Draw background, robot, walls and features
@@ -99,7 +99,7 @@ def run(robot, room, clear_paths=False):
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
         # Draw the estimated covariance ellipse
-        rect_centre = (predicted_pos[0] - predicted_cov[0]/2, predicted_pos[1] - predicted_cov[1]/2)
+        rect_centre = (_[0] - predicted_cov[0]/2, _[1] - predicted_cov[1]/2)
 
         print(f"RECT CENTRE: {rect_centre}")
         print(f"COV: {predicted_cov}")
