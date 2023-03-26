@@ -10,6 +10,9 @@ The following values are for the values of noise
 ##### MOTION MODEL ERRORS #####
 r_x, r_y, r_theta = 1, 1, 0.1
 
+##### CONTROL ERRORS #####
+e_vel, e_omega = 0.5, 0.1
+
 ##### ROBOT POSE ERRORS ####
 pose_x, pose_y, pose_theta = 0.01, 0.01, 0.01
 
@@ -124,7 +127,7 @@ class Robot:
         """
 
         x, y, theta = self.calculate_position(dt)
-        predicted_pos, predicted_cov, corrected_pos, corrected_cov = self.kalman_filter(dt)
+        corrected_pos, corrected_cov = self.kalman_filter(dt)
 
         self.pos = x, y
         self.theta = theta
@@ -133,9 +136,8 @@ class Robot:
         self.sigma = corrected_cov
 
         pos = (x, y)
-        pred_pos = (predicted_pos.item(0, 0), predicted_pos.item(1, 0))
-        pred_cov = (predicted_cov.item(0, 0), predicted_cov.item(1, 1))
         corr_pos = (corrected_pos.item(0, 0), corrected_pos.item(1, 0))
+        corr_cov = (corrected_cov.item(0, 0), corrected_cov.item(1, 1))
 
         '''print(f"The new position of the robot: {self.pos}")
         print(f"The new state of the robot: {corr_pos}")
@@ -143,7 +145,7 @@ class Robot:
         print(f"The predicted covariance:\n{predicted_cov}")
         print(f"The new covariance:\n{corrected_cov}\n---------------")'''
 
-        return pos, pred_pos, pred_cov, corr_pos
+        return pos, corr_pos, corr_cov
 
     def calculate_position(self, dt):
 
@@ -182,6 +184,13 @@ class Robot:
         #### PREDICTION ####
 
         # Control
+        velocity = self.velocity
+        omega = self.omega
+
+        error_vel, error_omega = np.random.normal(0, scale=e_vel),\
+                                np.random.normal(0, scale=e_omega)
+
+
         control = np.matrix([
             [self.velocity],
             [self.omega]
@@ -197,23 +206,60 @@ class Robot:
         predicted_position = (A * self.state) + (B * control)
 
         predicted_sigma = (A * self.sigma * np.transpose(A)) + R
-
         #print(f"\nThe current state is: \n{self.state}")
 
         #### CORRECTION ####
+        x, y = self.pos[0], self.pos[1]
 
-        observation = self.get_observation()
-        #print(f"\nThe observation is: \n{observation}")
+        count_features_in_range = 0
+        features_in_range = []
+        for feature in self.features:
+            distance = distance_to_feature((x, y), feature)
+            if distance < self.sensor_range + robot_radius:
+                 count_features_in_range += 1
+                 features_in_range.append(feature)
+        
+        if count_features_in_range >= 3:
+            observation = self.get_observation2(features_in_range)
+            #print(f"\nThe observation is: \n{observation}")
 
-        C_T = np.transpose(C)
-        kalman_gain = predicted_sigma * C_T * np.linalg.inv((C * predicted_sigma * C_T) + Q)
-        corrected_position = predicted_position + (kalman_gain * (observation - (C * predicted_position)))
+            C_T = np.transpose(C)
+            kalman_gain = predicted_sigma * C_T * np.linalg.inv((C * predicted_sigma * C_T) + Q)
+            corrected_position = predicted_position + (kalman_gain * (observation - (C * predicted_position)))
 
-        #print(f"\nCorrection position by KF:\n{corrected_position}")
+            #print(f"\nCorrection position by KF:\n{corrected_position}")
 
-        corrected_sigma = (np.identity(3) - (kalman_gain * C)) * predicted_sigma
+            corrected_sigma = (np.identity(3) - (kalman_gain * C)) * predicted_sigma
+        else:
+            corrected_position = predicted_position
+            corrected_sigma = predicted_sigma
+        return corrected_position, corrected_sigma
 
-        return predicted_position, predicted_sigma, corrected_position, corrected_sigma
+    def get_observation2(self, features_in_range):
+        x, y = self.pos[0], self.pos[1]
+        theta = self.theta
+
+        heading_vector = [robot_radius * np.cos(theta), robot_radius * np.sin(theta)]
+
+        theta_estimates = []
+        for feature in features_in_range:
+            feature_vector = [feature[0] - x, feature[1] - y]
+
+            alpha = bearing_to_feature(heading_vector, feature_vector)
+            beta = feature_inclination(feature_vector)
+            theta_estimates.append(beta - alpha)
+        
+        theta_avg = np.mean(theta_estimates)
+        error_x, error_y, error_theta = np.random.normal(0, scale=sensor_x),\
+                                        np.random.normal(0, scale=sensor_y), \
+                                        np.random.normal(0, scale=sensor_theta)
+        
+        observation = np.matrix([
+            [x + error_x],
+            [y + error_y],
+            [theta_avg + error_theta]
+        ])
+        return observation
 
     def get_observation(self):
         """
@@ -244,7 +290,7 @@ class Robot:
 
                 corrected_x = feature[0] - distance * np.cos(alpha)
                 corrected_y = feature[1] - distance * np.sin(alpha)
-                corrected_theta = alpha - beta
+                corrected_theta = beta - alpha
 
                 #print(f"Feature {feature} suggests the robot is at:\n"
                 #      f"{corrected_x}, {corrected_y} with angle: {np.degrees(corrected_theta)}")

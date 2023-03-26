@@ -95,8 +95,9 @@ def run(robot, room, preset_path, clear_paths=False):
         if preset_path == True:
             robot.omega += omega_changes[j]
             j +=1
-        pos, predicted_pos, predicted_cov, _ = robot.update_position()
-        predicted_path.append(_)
+
+        pos, corrected_pos, corrected_cov = robot.update_position()
+        predicted_path.append(corrected_pos)
         robot_path.append(pos)
 
         # Draw background, robot, walls and features
@@ -113,11 +114,11 @@ def run(robot, room, preset_path, clear_paths=False):
         pygame.draw.line(window_surface, "#000000", robot.pos, robot_line_end, width=2)
 
         # Draw the estimated covariance ellipse
-        rect_centre = (_[0] - predicted_cov[0]/2, _[1] - predicted_cov[1]/2)
+        rect_centre = (corrected_pos[0] - corrected_cov[0]/2, corrected_pos[1] - corrected_cov[1]/2)
 
-        print(f"RECT CENTRE: {rect_centre}")
-        print(f"COV: {predicted_cov}")
-        pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, predicted_cov), width=2)
+        #print(f"RECT CENTRE: {rect_centre}")
+        #print(f"COV: {corrected_cov}")
+        pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, corrected_cov), width=2)
 
         # Draw the predicted path and robot's path
         if i > 1:
