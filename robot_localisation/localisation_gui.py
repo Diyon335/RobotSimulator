@@ -16,10 +16,12 @@ feature_radius = 10
 line_limit = 1000
 
 
-def run(robot, room):
+def run(robot, room, clear_paths=False):
     """
     This runs the GUI for the robot localiser
 
+    :param clear_paths: Boolean. Indicates whether the drawn paths should be cleared after the path lists have exceeded
+    their limit
     :param room: Room list with walls and features
     :param robot: A robot object
     :return: None
@@ -41,6 +43,7 @@ def run(robot, room):
     features = room[1]
 
     predicted_path = []
+    robot_path = []
     i = 0
 
     global is_running
@@ -80,6 +83,7 @@ def run(robot, room):
 
         pos, predicted_pos, predicted_cov, _ = robot.update_position()
         predicted_path.append(predicted_pos)
+        robot_path.append(pos)
 
         # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
@@ -101,8 +105,9 @@ def run(robot, room):
         print(f"COV: {predicted_cov}")
         pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, predicted_cov), width=2)
 
-        # Draw the predicted path
+        # Draw the predicted path and robot's path
         if i > 1:
+            pygame.draw.lines(window_surface, "#000000", False, robot_path, 2)
             pygame.draw.lines(window_surface, "#008000", False, predicted_path, 2)
 
         # Draw features
@@ -124,7 +129,10 @@ def run(robot, room):
         # If the predicted path list has more than the set limit, reset i and clear the list
         if i > line_limit:
             i = 0
-            predicted_path.clear()
+
+            if clear_paths:
+                predicted_path.clear()
+                robot_path.clear()
 
 
 def distance_to_feature(robot_pos, feature_pos):

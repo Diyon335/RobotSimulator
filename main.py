@@ -65,5 +65,5 @@ if __name__ == '__main__':
     """
 
     robot = MobileRobot(robot_start, 200, feature_room)
-    localisation_gui.run(robot, feature_room)
+    localisation_gui.run(robot, feature_room, clear_paths=False)
 
