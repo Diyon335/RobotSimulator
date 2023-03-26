@@ -222,7 +222,9 @@ class Robot:
         :return: Returns a np matrix containing average, x y and theta
         """
 
-        state_x, state_y, state_theta = self.state.item(0, 0), self.state.item(1, 0), self.state.item(2, 0)
+        # state_x, state_y, state_theta = self.state.item(0, 0), self.state.item(1, 0), self.state.item(2, 0)
+        state_x, state_y, state_theta = self.pos[0], self.pos[1], self.theta
+        print("Theta is: ", str(self.theta))
 
         heading_vector = [robot_radius * np.cos(state_theta), robot_radius * np.sin(state_theta)]
 
