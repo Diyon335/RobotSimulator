@@ -114,13 +114,13 @@ def run(robot, room, preset_path, clear_paths=False):
 
                 predicted_path[path_count].append(corrected_pos)
         else:
-            print("CORRECTION")
+
             if not prev_did_correction:
-                print("here for sure")
+
                 prev_did_correction = True
                 corrected_path.append([predicted_path[path_count][-1], corrected_pos])
             else:
-                print("here")
+
                 corrected_path.append([corrected_path[-1][1], corrected_pos])
 
 
