@@ -7,17 +7,17 @@ robot_border_size = 2
 The following values are for the values of noise
 """
 
-##### MOTION MODEL ERRORS #####
+##### MOTION MODEL ERRORS R Matrix #####
 r_x, r_y, r_theta = 1, 1, 0.1
 
 ##### CONTROL ERRORS #####
 e_vel, e_omega = 0.5, 0.03
 
-##### ROBOT POSE ERRORS ####
-pose_x, pose_y, pose_theta = 0.01, 0.01, 0.01
+##### ROBOT POSE ERRORS Inital sigma values ####
+pose_x, pose_y, pose_theta = 0.01, 0.01, 0.1
 
-#### ROBOT SENSOR ERRORS ####
-sensor_x, sensor_y, sensor_theta = 1, 1, 0.01
+#### ROBOT SENSOR ERRORS Q Matrix ####
+sensor_x, sensor_y, sensor_theta = 1, 1, 0.1
 
 # Covariance matrix for motion model errors
 R = np.matrix([
