@@ -42,7 +42,10 @@ def run(robot, room, preset_path, clear_paths=False):
     walls = room[0]
     features = room[1]
 
-    predicted_path = []
+    path_count = 0
+    predicted_path = [[]]
+    prev_did_correction = False
+    corrected_path = []
     robot_path = []
     i = 0
 
@@ -97,7 +100,31 @@ def run(robot, room, preset_path, clear_paths=False):
             j +=1
 
         pos, corrected_pos, corrected_cov, did_correction_step = robot.update_position()
-        predicted_path.append(corrected_pos)
+        
+
+
+        
+        if not did_correction_step:
+            if prev_did_correction:
+                prev_did_correction = False
+                predicted_path.append([])
+                path_count += 1
+                predicted_path[path_count].append(corrected_pos)
+            else:
+
+                predicted_path[path_count].append(corrected_pos)
+        else:
+            print("CORRECTION")
+            if not prev_did_correction:
+                print("here for sure")
+                prev_did_correction = True
+                corrected_path.append([predicted_path[path_count][-1], corrected_pos])
+            else:
+                print("here")
+                corrected_path.append([corrected_path[-1][1], corrected_pos])
+
+
+
         robot_path.append(pos)
         
         # Draw background, robot, walls and features
@@ -121,9 +148,14 @@ def run(robot, room, preset_path, clear_paths=False):
         pygame.draw.ellipse(window_surface, "#000000", pygame.Rect(rect_centre, corrected_cov), width=2)
 
         # Draw the predicted path and robot's path
+
         if i > 1:
             pygame.draw.lines(window_surface, "#000000", False, robot_path, 2)
-            pygame.draw.lines(window_surface, "#008000", False, predicted_path, 2)
+            for path in predicted_path:
+                if len(path) >= 2:
+                    pygame.draw.lines(window_surface, "#008000", False, path, 2)
+            for path in corrected_path:
+                pygame.draw.lines(window_surface, "#ffa500", False, path, 2)
 
         # Draw features
         for feature in features:
