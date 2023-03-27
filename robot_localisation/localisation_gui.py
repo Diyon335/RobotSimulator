@@ -96,10 +96,10 @@ def run(robot, room, preset_path, clear_paths=False):
             robot.omega += omega_changes[j]
             j +=1
 
-        pos, corrected_pos, corrected_cov = robot.update_position()
+        pos, corrected_pos, corrected_cov, did_correction_step = robot.update_position()
         predicted_path.append(corrected_pos)
         robot_path.append(pos)
-
+        
         # Draw background, robot, walls and features
         window_surface.blit(background, (0, 0))
 

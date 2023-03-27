@@ -127,7 +127,7 @@ class Robot:
         """
 
         x, y, theta = self.calculate_position(dt)
-        corrected_pos, corrected_cov = self.kalman_filter(dt)
+        corrected_pos, corrected_cov, did_correction_step = self.kalman_filter(dt)
 
         self.pos = x, y
         self.theta = theta
@@ -145,7 +145,7 @@ class Robot:
         print(f"The predicted covariance:\n{predicted_cov}")
         print(f"The new covariance:\n{corrected_cov}\n---------------")'''
 
-        return pos, corr_pos, corr_cov
+        return pos, corr_pos, corr_cov, did_correction_step
 
     def calculate_position(self, dt):
 
@@ -219,6 +219,7 @@ class Robot:
                  count_features_in_range += 1
                  features_in_range.append(feature)
         
+        did_correction_step = False
         if count_features_in_range >= 3:
             observation = self.get_observation2(features_in_range)
             #print(f"\nThe observation is: \n{observation}")
@@ -228,12 +229,13 @@ class Robot:
             corrected_position = predicted_position + (kalman_gain * (observation - (C * predicted_position)))
 
             #print(f"\nCorrection position by KF:\n{corrected_position}")
-
+            did_correction_step = True
             corrected_sigma = (np.identity(3) - (kalman_gain * C)) * predicted_sigma
         else:
             corrected_position = predicted_position
             corrected_sigma = predicted_sigma
-        return corrected_position, corrected_sigma
+
+        return corrected_position, corrected_sigma, did_correction_step
 
     def get_observation2(self, features_in_range):
         x, y = self.pos[0], self.pos[1]
