@@ -82,6 +82,8 @@ def bearing_to_feature(heading_vector: list, feature_vector: list):
 
     return angle
 
+def bearing_to_feature_atan2(landmark, robot_pos):
+    return np.arctan2(landmark[1]-robot_pos[1], landmark[0] - robot_pos[0]) - robot_pos[2]
 
 class Robot:
 
@@ -241,13 +243,13 @@ class Robot:
         x, y = self.pos[0], self.pos[1]
         theta = self.theta
 
-        heading_vector = [robot_radius * np.cos(theta), robot_radius * np.sin(theta)]
+
 
         theta_estimates = []
         for feature in features_in_range:
             feature_vector = [feature[0] - x, feature[1] - y]
 
-            alpha = bearing_to_feature(heading_vector, feature_vector)
+            alpha = bearing_to_feature_atan2([feature[0], feature[1]], [x,y,theta])
             beta = feature_inclination(feature_vector)
             theta_estimates.append(beta - alpha)
         
